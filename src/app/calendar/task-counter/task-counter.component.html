@@ -1,0 +1,65 @@
+<ion-modal [isOpen]="isOpen()" [class.completed]="mode() === 'completed'" (didDismiss)="dismissed.emit()" aria-labelledby="counter-title">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title id="counter-title">Contador de tareas</ion-title>
+        <ion-buttons slot="end"><ion-button aria-label="Cerrar" (click)="dismissed.emit()"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="counter-content">
+        <div class="filters">
+          <ion-select label="Periodo" labelPlacement="stacked" fill="outline" interface="popover" [value]="period()"
+            [disabled]="loading()" (ionChange)="changePeriod($event.detail.value)">
+            <ion-select-option value="all">Todo el historial</ion-select-option>
+            @for (month of months(); track month) { <ion-select-option [value]="month">{{ monthLabel(month) }}</ion-select-option> }
+          </ion-select>
+          <div class="mode-filter"><p id="counter-mode-label">Mostrar</p><div class="mode-control" role="group" aria-labelledby="counter-mode-label">
+            <ion-button fill="clear" [class.active]="mode() === 'assigned'" [attr.aria-pressed]="mode() === 'assigned'" [disabled]="loading()" (click)="changeMode('assigned')">Asignadas</ion-button>
+            <ion-button fill="clear" [class.active]="mode() === 'completed'" [attr.aria-pressed]="mode() === 'completed'" [disabled]="loading()" (click)="changeMode('completed')">Completadas</ion-button>
+          </div></div>
+        </div>
+        <p class="period-note">El mes corresponde al lunes de la semana asignada, no a la fecha límite.</p>
+        <div [attr.aria-busy]="loading()">
+          @if (loading()) {
+            <p class="loading" role="status"><ion-spinner name="crescent" aria-hidden="true"></ion-spinner> Cargando contador…</p>
+          } @else if (error()) {
+            <div class="empty" role="alert"><h2>No se pudo cargar el contador</h2><p>{{ error() }}</p><ion-button fill="clear" (click)="reload(true)">Reintentar</ion-button></div>
+          } @else if (loaded()) {
+            <div class="summary"><div><h2>{{ mode() === 'assigned' ? 'Tareas asignadas' : 'Tareas completadas' }}</h2><p>{{ periodLabel() }}</p></div><strong>{{ total() }}</strong></div>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Tabla de tareas por compañero, desplazable horizontalmente">
+              <table>
+                <caption>{{ mode() === 'assigned' ? 'Asignadas' : 'Completadas' }} por compañero · {{ periodLabel() }}</caption>
+                <thead><tr><th scope="col">Compañero</th>@for (column of columns; track column.id) { <th scope="col">{{ column.label }}</th> }<th scope="col" class="total-column">Total</th></tr></thead>
+                <tbody>
+                  @for (row of rows(); track row.mate.id) {
+                    <tr><th scope="row"><span class="mate"><ion-avatar [class]="'avatar avatar--' + row.color" aria-hidden="true"><span>{{ row.mate.avatar }}</span></ion-avatar>{{ row.mate.nombre }}</span></th>
+                      @for (column of columns; track column.id; let index = $index) {
+                        @if (row.values[index] > 0 || isEligible(row.mate.id, column.id)) { <td>{{ row.values[index] }}</td> }
+                        @else { <td class="not-eligible" aria-label="No realiza esta tarea">—</td> }
+                      }
+                      <td class="total-column">{{ row.total }}</td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot><tr><th scope="row">Total</th>@for (value of totals(); track $index) { <td>{{ value }}</td> }<td class="total-column">{{ total() }}</td></tr></tfoot>
+              </table>
+            </div>
+            <div class="table-notes"><span>— No realiza esta tarea · 0 Sin tareas en esta vista</span><span class="scroll-note">Desliza para ver todas las columnas.</span></div>
+            @if (!total()) {
+              <div class="empty"><h2>{{ mode() === 'assigned' ? 'Sin tareas en este periodo' : 'Sin tareas marcadas como completadas' }}</h2><p>Elige otro periodo o cambia la vista.</p></div>
+            }
+            @if (counts().unmatched) {
+              <p class="warning" role="status">{{ counts().unmatched }} tareas no se han incluido porque no se puede identificar su compañero o tipo de tarea. Los totales corresponden solo a las tareas identificadas.</p>
+            }
+            @if (missingWeekDates()) {
+              <p class="warning" role="status">Hay {{ missingWeekDates() }} tareas antiguas sin semana asignada. No se pueden filtrar por mes; consulta todo el historial para ver su recuento.</p>
+            }
+            <p class="explanation">{{ mode() === 'assigned' ? 'Incluye pendientes y completadas. Este recuento refleja las asignaciones, no confirma que las tareas se hayan realizado.' : 'Solo cuenta tareas marcadas como completadas. Si alguien olvidó cambiar el estado, su tarea no aparece en este recuento.' }}</p>
+          }
+        </div>
+      </div>
+    </ion-content>
+    <ion-footer class="ion-no-border"><div class="counter-footer"><p>Solo consulta. No modifica tareas.</p><ion-button fill="clear" (click)="dismissed.emit()">Cerrar</ion-button></div></ion-footer>
+  </ng-template>
+</ion-modal>

@@ -1,0 +1,60 @@
+:root {
+  color-scheme: light;
+  --ion-font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+  --ion-background-color: #f6f7f2;
+  --ion-background-color-rgb: 246, 247, 242;
+  --ion-text-color: #293d33;
+  --ion-text-color-rgb: 41, 61, 51;
+  --ion-color-primary: #347653;
+  --ion-color-primary-rgb: 52, 118, 83;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #2e6849;
+  --ion-color-primary-tint: #488464;
+  --ion-card-background: #ffffff;
+  --ion-toolbar-background: #f6f7f2;
+  --ion-tab-bar-background: #ffffff;
+  --ion-tab-bar-color: #647269;
+  --ion-tab-bar-color-selected: #347653;
+  --ion-tab-bar-border-color: #e5e9df;
+  --housemate-surface: #ffffff;
+  --housemate-sage: #e7f0e3;
+  --housemate-muted: #647269;
+  --housemate-sand: #eee9dc;
+  --housemate-line: #e5e9df;
+  --housemate-progress-track: #ccdec6;
+  --housemate-progress-heading: #2c6044;
+  --housemate-progress-text: #365d46;
+  --housemate-due: #92601e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --ion-background-color: #18201c;
+    --ion-background-color-rgb: 24, 32, 28;
+    --ion-text-color: #edf2e9;
+    --ion-text-color-rgb: 237, 242, 233;
+    --ion-color-primary: #9bceaa;
+    --ion-color-primary-rgb: 155, 206, 170;
+    --ion-color-primary-contrast: #18201c;
+    --ion-color-primary-contrast-rgb: 24, 32, 28;
+    --ion-color-primary-shade: #88b596;
+    --ion-color-primary-tint: #a5d3b3;
+    --ion-card-background: #242e28;
+    --ion-toolbar-background: #18201c;
+    --ion-tab-bar-background: #242e28;
+    --ion-tab-bar-color: #b1bdb2;
+    --ion-tab-bar-color-selected: #9bceaa;
+    --ion-tab-bar-border-color: #37463b;
+    --housemate-surface: #242e28;
+    --housemate-sage: #2b3d2e;
+    --housemate-muted: #b1bdb2;
+    --housemate-sand: #3b372c;
+    --housemate-line: #37463b;
+    --housemate-progress-track: #47604a;
+    --housemate-progress-heading: #c3e2bd;
+    --housemate-progress-text: #c1d7bc;
+    --housemate-due: #e5bd82;
+  }
+}

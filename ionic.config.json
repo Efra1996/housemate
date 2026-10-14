@@ -1,0 +1,7 @@
+{
+  "name": "housemate",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

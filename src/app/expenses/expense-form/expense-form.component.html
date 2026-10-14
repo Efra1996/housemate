@@ -1,0 +1,48 @@
+<ion-modal [isOpen]="isOpen()" [canDismiss]="!saving()" (didDismiss)="dismissed.emit()" aria-labelledby="expense-form-title">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title id="expense-form-title">Añadir gasto</ion-title>
+        <ion-buttons slot="end"><ion-button aria-label="Cerrar" [disabled]="saving()" (click)="close()"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="form-content">
+        <ion-select label="¿Quién ha pagado?" labelPlacement="stacked" interface="alert" placeholder="Selecciona tu nombre"
+          cancelText="Cancelar" okText="Elegir" [value]="payerId()" [disabled]="saving()" (ionChange)="selectPayer($event.detail.value)">
+          @for (mate of mates; track mate.id) { <ion-select-option [value]="mate.id">{{ mate.nombre }}</ion-select-option> }
+        </ion-select>
+        <ion-textarea label="Descripción" labelPlacement="stacked" placeholder="Por ejemplo, compra del supermercado"
+          [maxlength]="200" [autoGrow]="true" [rows]="2" [value]="description()" [disabled]="saving()" (ionInput)="description.set($event.detail.value ?? '')"></ion-textarea>
+        <ion-input label="Importe en euros" labelPlacement="stacked" type="text" inputmode="decimal" placeholder="50,00"
+          [value]="amount()" [disabled]="saving()" (ionInput)="amount.set($event.detail.value ?? '')"><span slot="end" aria-hidden="true">€</span></ion-input>
+        @if (amount().trim() && amountCents() === null) { <p class="hint">Introduce un importe mayor que cero, con un máximo de dos decimales.</p> }
+        <section aria-labelledby="participants-title">
+          <div class="participants-heading"><h2 id="participants-title">¿Entre quiénes se reparte?</h2><ion-button fill="clear" size="small" [disabled]="saving()" (click)="selectAll()">Seleccionar todos</ion-button></div>
+          <ion-list lines="none" class="mates">
+            @for (mate of mates; track mate.id) {
+              <ion-item lines="none">
+                <ion-avatar slot="start" aria-hidden="true"><span>{{ mate.avatar }}</span></ion-avatar>
+                <ion-checkbox justify="space-between" [checked]="participantIds().includes(mate.id)" [disabled]="saving()"
+                  (ionChange)="changeParticipant(mate.id, $event.detail.checked)">{{ mate.nombre }}</ion-checkbox>
+              </ion-item>
+            }
+          </ion-list>
+          <p class="hint">Elige también al pagador si participa en el gasto.</p>
+        </section>
+        <div class="preview" aria-live="polite" aria-atomic="true">
+          <strong>{{ preview() }}</strong>
+          @if (shares().length) {
+            <p>{{ formatAmount(amountCents() ?? 0) }} entre {{ participantIds().length }}.</p>
+            @if (hasRemainder()) { <p>Los céntimos restantes se asignan por orden de compañero.</p> }
+          }
+        </div>
+        @if (error()) { <p class="error-message" role="alert">{{ error() }}</p> }
+      </div>
+    </ion-content>
+    <ion-footer class="ion-no-border"><div class="form-footer">
+      <ion-button fill="outline" [disabled]="saving()" (click)="close()">Cancelar</ion-button>
+      <ion-button [disabled]="!canSave()" (click)="save()">{{ saving() ? 'Guardando…' : 'Guardar gasto' }}</ion-button>
+    </div></ion-footer>
+  </ng-template>
+</ion-modal>

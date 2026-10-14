@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Añadir gasto</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df;
+      --contrast: #ffffff;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --contrast: #18201c; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    .page { max-width: 800px; margin: auto; padding: 34px 32px; }
+    .heading, .section-heading, .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 650; }
+    .eyebrow { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+    .button { min-height: 46px; padding: 12px 16px; border: 0; border-radius: 13px; font-size: 13px; font-weight: 600; }
+    .secondary { background: var(--sage); color: var(--green); }
+    .primary { background: var(--green); color: var(--contrast); }
+    .summary { margin-top: 26px; padding: 25px; border-radius: 22px; background: var(--sage); }
+    .summary p { margin: 0; font-size: 13px; color: var(--green); }
+    .summary strong { display: block; margin-top: 7px; font-size: 32px; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .section-heading { margin: 26px 0 15px; }
+    .section-heading span, .note { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .records { display: grid; gap: 11px; }
+    .record { display: flex; justify-content: space-between; gap: 16px; padding: 20px; border-radius: 17px; background: var(--surface); }
+    .record h3 { margin: 0 0 7px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+    .record p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .money { white-space: nowrap; text-align: right; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .money small { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; }
+    dialog { width: min(480px, calc(100vw - 40px)); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); padding: 0; border: 0; border-radius: 24px; background: var(--background); color: var(--ink); overflow: auto; }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    .modal-heading { padding: 14px 22px; border-bottom: 1px solid var(--line); }
+    .close { width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); font-size: 27px; }
+    .fields { padding: 20px 24px; }
+    .field { display: grid; gap: 8px; margin-bottom: 18px; font-size: 13px; font-weight: 600; }
+    select, textarea, .amount { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
+    select, textarea { padding: 13px; }
+    textarea { resize: vertical; min-height: 82px; font-weight: 400; }
+    .amount { display: flex; align-items: center; padding-right: 15px; }
+    .amount input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--ink); padding: 13px; }
+    fieldset { margin: 0; padding: 0; border: 0; }
+    legend { padding: 0; font-size: 13px; font-weight: 600; }
+    .select-all { display: block; margin: 8px 0 10px auto; border: 0; background: transparent; color: var(--green); min-height: 44px; padding: 8px; font-size: 12px; }
+    .mates { background: var(--surface); padding: 0 14px; border-radius: 16px; }
+    .mate { display: flex; align-items: center; gap: 12px; min-height: 52px; font-size: 14px; cursor: pointer; }
+    .mate + .mate { border-top: 1px solid var(--line); }
+    .mate input { width: 20px; height: 20px; accent-color: var(--green); margin-left: auto; }
+    .avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--sage); color: var(--green); font-size: 10px; font-weight: 700; }
+    .preview { margin-top: 18px; padding: 16px; border-radius: 16px; background: var(--sage); }
+    .preview strong { display: block; font-size: 17px; }
+    .preview p { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
+    .footer { display: grid; grid-template-columns: 1fr 1.7fr; gap: 10px; padding: 16px 24px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+    @media (max-width: 600px) {
+      .page { padding: 28px 20px; }
+      dialog { width: 100%; max-width: none; margin: auto 0 0; max-height: 94vh; max-height: 94dvh; border-radius: 24px 24px 0 0; }
+      .fields { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="heading"><div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div><button class="button secondary" id="open">＋ Añadir gasto</button></header>
+    <div class="section-heading"><h2>Últimos gastos</h2><span id="count">1 gasto</span></div>
+    <section class="records" id="records" aria-label="Gastos registrados"></section>
+    <p class="note">Borrador con compañeros y gastos de ejemplo. Los cambios se pierden al recargar. No se conecta a Firestore.</p>
+    <p class="note" id="notice" role="status"></p>
+  </main>
+  <dialog id="modal" aria-labelledby="modal-title">
+    <form id="form">
+      <header class="modal-heading"><h2 id="modal-title">Añadir gasto</h2><button class="close" type="button" id="close" aria-label="Cerrar">×</button></header>
+      <div class="fields">
+        <label class="field">¿Quién ha pagado?<select id="payer" required><option value="">Selecciona tu nombre</option></select></label>
+        <label class="field">Descripción<textarea id="description" maxlength="200" required placeholder="Por ejemplo, compra del supermercado"></textarea></label>
+        <label class="field">Importe<div class="amount"><input id="amount" type="text" inputmode="decimal" required placeholder="50,00" aria-label="Importe en euros"><span>€</span></div></label>
+        <fieldset><legend>¿Entre quiénes se reparte?</legend><button id="all" class="select-all" type="button">Seleccionar todos</button><div id="mates" class="mates"></div></fieldset>
+        <div class="preview" aria-live="polite" aria-atomic="true"><strong id="share">Selecciona al menos un compañero</strong><p id="split-note">Elige también al pagador si participa en el gasto.</p></div>
+      </div>
+      <footer class="footer"><button class="button secondary" id="cancel" type="button">Cancelar</button><button class="button primary" id="save" type="submit" disabled>Guardar gasto</button></footer>
+    </form>
+  </dialog>
+  <script>
+    // Review-only mock data; no persistence or application services.
+    const mates = [{ id: '1', name: 'Maya', initials: 'MA' }, { id: '2', name: 'Álex', initials: 'ÁL' }, { id: '3', name: 'Sam', initials: 'SA' }, { id: '4', name: 'Dani', initials: 'DA' }, { id: '5', name: 'Efra', initials: 'EF' }];
+    const byId = (id) => document.getElementById(id);
+    const currency = (cents) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+    const expenses = [{ description: 'Compra del supermercado', cents: 5000, payer: '5', participants: mates.map((mate) => mate.id) }];
+    const modal = byId('modal');
+    for (const mate of mates) {
+      const option = document.createElement('option'); option.value = mate.id; option.textContent = mate.name; byId('payer').append(option);
+      const label = document.createElement('label'); label.className = 'mate';
+      const avatar = document.createElement('span'); avatar.className = 'avatar'; avatar.textContent = mate.initials; avatar.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.textContent = mate.name;
+      const input = document.createElement('input'); input.type = 'checkbox'; input.value = mate.id;
+      label.append(avatar, name, input); byId('mates').append(label);
+    }
+    function readDraft() {
+      const raw = byId('amount').value.trim().replace(',', '.');
+      const cents = /^\d+(\.\d{1,2})?$/.test(raw) ? Math.round(Number(raw) * 100) : 0;
+      return { cents, payer: byId('payer').value, description: byId('description').value.trim(), participants: [...byId('mates').querySelectorAll('input:checked')].map((input) => input.value) };
+    }
+    function updatePreview() {
+      const draft = readDraft(); const count = draft.participants.length;
+      const validAmount = Number.isSafeInteger(draft.cents) && draft.cents > 0;
+      byId('save').disabled = !validAmount || !draft.payer || !draft.description || !count;
+      byId('share').textContent = !count ? 'Selecciona al menos un compañero' : !validAmount ? 'Introduce un importe válido' : draft.cents % count ? `${currency(Math.floor(draft.cents / count))}–${currency(Math.ceil(draft.cents / count))} por persona` : `${currency(draft.cents / count)} por persona`;
+      byId('split-note').textContent = count && validAmount ? `${currency(draft.cents)} entre ${count}. ${draft.cents % count ? 'Los céntimos restantes se asignan por orden de compañero.' : 'Reparto a partes iguales.'}` : 'Elige también al pagador si participa en el gasto.';
+    }
+    function render() {
+      byId('records').replaceChildren();
+      for (const expense of expenses) {
+        const article = document.createElement('article'); article.className = 'record';
+        const copy = document.createElement('div'); const title = document.createElement('h3'); title.textContent = expense.description;
+        const payer = document.createElement('p'); payer.textContent = `Pagó ${mates.find((mate) => mate.id === expense.payer).name}`;
+        const people = document.createElement('p'); people.textContent = expense.participants.map((id) => mates.find((mate) => mate.id === id).name).join(', ');
+        copy.append(title, payer, people);
+        const money = document.createElement('div'); money.className = 'money'; const amount = document.createElement('strong'); amount.textContent = currency(expense.cents);
+        const detail = document.createElement('small'); detail.textContent = `Entre ${expense.participants.length}`; money.append(amount, detail);
+        article.append(copy, money); byId('records').append(article);
+      }
+      byId('count').textContent = `${expenses.length} ${expenses.length === 1 ? 'gasto' : 'gastos'}`;
+    }
+    byId('open').onclick = () => { byId('form').reset(); updatePreview(); modal.showModal(); };
+    byId('close').onclick = byId('cancel').onclick = () => modal.close();
+    byId('all').onclick = () => { byId('mates').querySelectorAll('input').forEach((input) => { input.checked = true; }); updatePreview(); };
+    byId('form').addEventListener('input', updatePreview);
+    byId('form').addEventListener('change', updatePreview);
+    byId('form').onsubmit = (event) => { event.preventDefault(); updatePreview(); if (byId('save').disabled) return; expenses.unshift(readDraft()); render(); modal.close(); byId('notice').textContent = 'Gasto guardado en este borrador.'; };
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+.calendar-page {
+  --page-gutter: 32px;
+  --page-top: 40px;
+  max-width: 760px;
+  margin: auto;
+  padding: calc(var(--page-top) + var(--ion-safe-area-top, 0px)) max(var(--page-gutter), var(--ion-safe-area-right, 0px)) 28px max(var(--page-gutter), var(--ion-safe-area-left, 0px));
+}
+
+.page-heading, .calendar-heading, .agenda-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-heading { margin-bottom: 30px; flex-wrap: wrap; }
+.eyebrow { margin: 0 0 6px; font-size: 12px; color: var(--housemate-muted); }
+h1 { margin: 0; font-size: 30px; font-weight: 650; }
+h2 { margin: 0; font-size: 22px; font-weight: 650; }
+
+.calendar-heading { margin-bottom: 17px; }
+.calendar-toggle {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  --border-radius: 13px;
+  --border-style: solid;
+  --border-width: 1px;
+  --border-color: var(--housemate-line);
+  --background: var(--housemate-surface);
+
+  &[aria-expanded='true'] { --background: var(--housemate-sage); --border-color: var(--ion-color-primary); }
+}
+
+ion-card { margin: 0; box-shadow: none; color: var(--ion-text-color); --background: var(--housemate-surface); }
+.calendar-surface { border: 1px solid var(--housemate-line); border-radius: 20px; }
+ion-datetime { width: 100%; max-width: none; --background: var(--housemate-surface); }
+.week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 18px 5px 14px; }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.weekday-label { font-size: 11px; color: var(--housemate-muted); }
+.day-button {
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  font-size: 15px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --border-radius: 50%;
+  --color: var(--ion-text-color);
+
+  &.selected { --background: var(--ion-color-primary); --color: var(--ion-color-primary-contrast); font-weight: 650; }
+}
+.task-indicator { width: 4px; height: 4px; border-radius: 50%; }
+.has-tasks { background: var(--ion-color-primary); }
+.calendar-hint { margin: 12px 4px 0; color: var(--housemate-muted); font-size: 11px; }
+.agenda { margin-top: 30px; }
+.agenda-heading { flex-wrap: wrap; }
+.counter-button { margin: 0; --background: var(--housemate-sage); --border-radius: 12px; text-transform: none; }
+.count { color: var(--ion-color-primary); font-size: 12px; white-space: nowrap; }
+.selected-date { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 6px 0 22px; font-size: 13px; color: var(--housemate-muted); }
+.schedule { padding: 0; background: transparent; display: grid; gap: 16px; }
+.appointment { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; align-items: start; }
+.timeline {
+  position: relative;
+  align-self: stretch;
+
+  &::before { content: ''; position: absolute; top: 22px; left: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--ion-color-primary); }
+}
+.appointment:not(:last-child) .timeline::after { content: ''; position: absolute; top: 34px; bottom: -30px; left: 7px; width: 1px; background: var(--housemate-line); }
+.task-card { border-radius: 17px; }
+ion-item { --background: var(--housemate-surface); --padding-start: 17px; --inner-padding-end: 17px; --min-height: 106px; }
+ion-label {
+  margin: 16px 0;
+  h3 { margin: 0 0 7px; font-size: 15px; font-weight: 600; }
+  p { font-size: 12px; color: var(--housemate-muted); }
+}
+ion-badge { margin-top: 11px; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 400; --background: var(--housemate-sage); --color: var(--ion-color-primary); }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: 12px;
+  color: #374438;
+  font-size: 10px;
+  font-weight: 700;
+  &--peach { background: #edc5a9; }
+  &--sage { background: #d4dfba; }
+  &--lavender { background: #dbd0e8; }
+  &--blue { background: #cbdde2; }
+  &--sand { background: #e6d9b9; }
+}
+.empty-state {
+  padding: 24px;
+  border-radius: 17px;
+  h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+  p { margin: 0; color: var(--housemate-muted); font-size: 13px; line-height: 1.6; }
+}
+.example-note { margin: 30px 0 0; color: var(--housemate-muted); font-size: 11px; line-height: 1.6; }
+
+@media (max-width: 600px) {
+  .calendar-page { max-width: 460px; --page-gutter: 20px; --page-top: 28px; }
+  .appointment { grid-template-columns: 10px minmax(0, 1fr); gap: 7px; }
+  ion-item { --padding-start: 12px; --inner-padding-end: 12px; }
+}

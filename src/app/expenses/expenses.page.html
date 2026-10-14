@@ -1,0 +1,33 @@
+<ion-content>
+  <main class="expenses-page">
+    <header class="page-heading">
+      <div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div>
+      <ion-button class="add-expense" [disabled]="!!error()" aria-haspopup="dialog" (click)="formOpen.set(true)">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>Añadir gasto
+      </ion-button>
+    </header>
+    @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+    <section aria-labelledby="expenses-title">
+      <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><ion-text>{{ error() ? 'No disponible' : expenses().length + (expenses().length === 1 ? ' gasto' : ' gastos') }}</ion-text></div>
+      @if (error()) {
+        <ion-card class="empty-state" role="alert"><h3>No se pudieron cargar los gastos</h3><p>{{ error() }}</p><ion-button fill="clear" (click)="loadData()">Reintentar</ion-button></ion-card>
+      } @else if (expenses().length) {
+        <ion-list class="record-list" lines="none" aria-label="Gastos registrados, del más reciente al más antiguo">
+          @for (expense of expenses(); track expense.id) {
+            <ion-card class="record">
+              <ion-item lines="none">
+                <ion-icon class="expense-icon" slot="start" name="receipt-outline" aria-hidden="true"></ion-icon>
+                <ion-label class="ion-text-wrap"><h3>{{ expense.description }}</h3><p>{{ dateLabel(expense) }} · Pagó {{ mateName(expense.payerId) }}</p><p>Compartido entre {{ expense.shares.length }}: {{ participantsLabel(expense) }}</p></ion-label>
+                <ion-text class="money" slot="end"><strong>{{ formatAmount(expense.amountCents) }}</strong><span class="detail">{{ shareLabel(expense) }} / persona</span></ion-text>
+              </ion-item>
+            </ion-card>
+          }
+        </ion-list>
+      } @else {
+        <ion-card class="empty-state"><h3>Todavía no hay gastos</h3><p>Añade un gasto y elige los compañeros entre los que se reparte.</p><ion-button fill="outline" (click)="formOpen.set(true)">Añadir gasto</ion-button></ion-card>
+      }
+    </section>
+    <p class="local-note">Los gastos se guardan solo en este navegador y no se comparten con otros dispositivos. Se pueden perder al borrar los datos del navegador. Los compañeros son de ejemplo.</p>
+  </main>
+</ion-content>
+<app-expense-form [isOpen]="formOpen()" (saved)="onSaved($event)" (dismissed)="formOpen.set(false)"></app-expense-form>

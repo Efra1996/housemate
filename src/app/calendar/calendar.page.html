@@ -1,0 +1,91 @@
+<ion-content>
+  <main class="calendar-page">
+    <header class="page-heading">
+      <div><p class="eyebrow">El hogar, organizado</p><h1>Calendario</h1></div>
+    </header>
+    @if (saveNotice()) { <p class="calendar-hint" role="status">{{ saveNotice() }}</p> }
+
+    <section aria-labelledby="month-title">
+      <div class="calendar-heading">
+        <h2 class="date-heading" id="month-title">{{ monthLabel() }}</h2>
+        <ion-button class="calendar-toggle" fill="clear" (click)="expanded.set(!expanded())"
+          [attr.aria-label]="expanded() ? 'Mostrar solo la semana' : 'Mostrar mes completo'"
+          [attr.aria-expanded]="expanded()" aria-controls="calendar-dates">
+          <ion-icon slot="icon-only" name="calendar-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </div>
+      <ion-card class="calendar-surface" id="calendar-dates" [attr.aria-busy]="loading()">
+        @if (loading()) {
+          <ion-skeleton-text [animated]="true" class="ion-no-margin" style="height: 120px; width: 100%" aria-label="Cargando calendario"></ion-skeleton-text>
+        } @else if (expanded()) {
+          <ion-datetime presentation="date" locale="es-ES" [firstDayOfWeek]="1"
+            [value]="selectedDate()" [highlightedDates]="highlightedDates()"
+            (ionChange)="selectDate($event.detail.value)" aria-label="Seleccionar fecha de la agenda">
+          </ion-datetime>
+        } @else {
+          <div class="week-strip" role="group" aria-label="Seleccionar un día de la semana">
+            @for (day of weekDays(); track day.date) {
+              <div class="week-day">
+                <span class="weekday-label" aria-hidden="true">{{ day.label }}</span>
+                <ion-button class="day-button" [class.selected]="day.date === selectedDate()" fill="clear"
+                  [attr.aria-pressed]="day.date === selectedDate()"
+                  [attr.aria-label]="day.fullLabel + ', ' + day.taskCount + ' tareas'"
+                  (click)="selectDate(day.date)">{{ day.number }}</ion-button>
+                <span class="task-indicator" [class.has-tasks]="day.taskCount > 0" aria-hidden="true"></span>
+              </div>
+            }
+          </div>
+        }
+      </ion-card>
+      <p class="calendar-hint">{{ expanded() ? 'Los días destacados son fechas límite.' : 'Los puntos indican fechas límite.' }} Las tareas se pueden hacer durante la semana.</p>
+    </section>
+
+    <section class="agenda" aria-labelledby="agenda-title">
+      <div class="agenda-heading"><h2 id="agenda-title">Agenda del día</h2><ion-button class="counter-button" fill="clear" size="small" [disabled]="loading() || !mates().length" aria-haspopup="dialog" (click)="counterOpen.set(true)">Contador de tareas</ion-button></div>
+      <p class="selected-date date-heading">{{ selectedDateLabel() }} <span class="count">{{ loading() ? 'Cargando…' : error() ? 'No disponible' : agenda().length + (agenda().length === 1 ? ' tarea' : ' tareas') }}</span></p>
+      <div aria-live="polite" aria-atomic="true" [attr.aria-busy]="loading()">
+        @if (loading()) {
+          <ion-list class="schedule" lines="none" aria-label="Cargando agenda">
+            @for (row of skeletonRows; track row) {
+              <ion-card class="task-card" aria-hidden="true">
+                <ion-item lines="none">
+                  <ion-label><ion-skeleton-text [animated]="true" style="width: 75%; height: 16px"></ion-skeleton-text><ion-skeleton-text [animated]="true" style="width: 55%; height: 12px"></ion-skeleton-text><ion-skeleton-text [animated]="true" style="width: 30%; height: 12px"></ion-skeleton-text></ion-label>
+                  <ion-avatar slot="end"><ion-skeleton-text [animated]="true"></ion-skeleton-text></ion-avatar>
+                </ion-item>
+              </ion-card>
+            }
+          </ion-list>
+        } @else if (error()) {
+          <ion-card class="empty-state"><h3>No se pudo cargar la agenda</h3><p>{{ error() }}</p><ion-button fill="clear" (click)="loadData()">Reintentar</ion-button></ion-card>
+        } @else if (agenda().length) {
+          <ion-list class="schedule" lines="none" aria-label="Tareas con fecha límite en el día seleccionado">
+            @for (task of agenda(); track task.id) {
+              @let mate = taskMate(task);
+              <div class="appointment">
+                <span class="timeline" aria-hidden="true"></span>
+                <ion-card class="task-card">
+                  <ion-item lines="none" [button]="true" [detail]="false" (click)="openTaskDetail(task)"
+                    aria-haspopup="dialog" [attr.aria-label]="'Ver detalles de ' + task.task + ', asignada a ' + (mate?.nombre ?? task.mate) + ', ' + (task.todo ? 'pendiente' : 'completada')">
+                    <ion-label class="ion-text-wrap"><h3>{{ task.task }}</h3><p>Asignada a {{ mate?.nombre ?? task.mate }}</p><p>Fecha límite: {{ selectedDateLabel() }}</p><ion-badge>{{ task.todo ? 'Pendiente' : 'Completada' }}</ion-badge></ion-label>
+                    @if (mate) {
+                      <ion-avatar slot="end" [class]="'avatar avatar--' + avatarColor(mate.id)" [attr.aria-label]="mate.nombre"><span>{{ mate.avatar }}</span></ion-avatar>
+                    }
+                  </ion-item>
+                </ion-card>
+              </div>
+            }
+          </ion-list>
+        } @else if (!weekHasTasks()) {
+          <ion-card class="empty-state"><h3>Esta semana todavía no está organizada</h3><p>Organiza la semana para repartir las tareas entre los compañeros disponibles.</p><ion-button fill="outline" [disabled]="!mates().length" (click)="organizerOpen.set(true)">Organizar semana</ion-button></ion-card>
+        } @else {
+          <ion-card class="empty-state"><h3>No hay tareas para este día</h3><p>Selecciona una fecha destacada para ver sus tareas.</p></ion-card>
+        }
+      </div>
+    </section>
+    <p class="example-note">Organiza una semana, revisa la propuesta y guarda las tareas del hogar.</p>
+  </main>
+</ion-content>
+<app-organize-week [isOpen]="organizerOpen()" [mates]="mates()" [initialDate]="selectedDate()" (saved)="onWeekSaved($event)" (dismissed)="organizerOpen.set(false)"></app-organize-week>
+<app-task-detail [task]="detailTask()" [mate]="detailMate()" [avatarColor]="detailAvatarColor()"
+  (saved)="onTaskStatusSaved($event)" (dismissed)="detailTask.set(null)"></app-task-detail>
+<app-task-counter [isOpen]="counterOpen()" [mates]="mates()" [initialMonth]="selectedDate().slice(0, 7)" (dismissed)="counterOpen.set(false)"></app-task-counter>

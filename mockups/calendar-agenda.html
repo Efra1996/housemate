@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>Housemate — Calendario y agenda</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    button:disabled { cursor: default; }
+    .icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .symbols { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .app { max-width: 760px; margin: auto; padding: 40px 32px 115px; }
+    .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
+    .eyebrow { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+    h1 { font-size: 30px; font-weight: 650; letter-spacing: -.8px; margin: 0; }
+    .add { background: var(--sage); color: var(--green); border: 0; border-radius: 13px; padding: 12px 15px; font-size: 13px; font-weight: 600; }
+    .calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+    h2 { font-size: 22px; font-weight: 650; letter-spacing: -.5px; margin: 0; }
+    .toggle { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--green); }
+    .toggle[aria-expanded='true'] { background: var(--sage); border-color: var(--green); }
+    .calendar-surface { padding: 14px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+    .weekdays, .dates { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .weekdays { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0 12px; }
+    .day { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 57px; padding: 5px 2px; border: 0; border-radius: 10px; background: transparent; }
+    .day-number { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-size: 15px; }
+    .day[aria-pressed='true'] .day-number { background: var(--green); color: #fff; font-weight: 650; }
+    .day.today:not([aria-pressed='true']) .day-number { box-shadow: inset 0 0 0 1px var(--green); color: var(--green); }
+    .day.outside { color: var(--muted); }
+    .dots { display: flex; gap: 3px; height: 4px; }
+    .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+    .calendar-hint { font-size: 11px; color: var(--muted); margin: 12px 4px 0; }
+    .agenda { margin-top: 30px; }
+    .agenda-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .count { color: var(--green); font-size: 12px; white-space: nowrap; }
+    .selected-date { font-size: 13px; color: var(--muted); margin: 0 0 22px; }
+    .schedule { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+    .appointment { display: grid; grid-template-columns: 48px 12px minmax(0, 1fr); gap: 10px; align-items: start; }
+    .time { padding-top: 18px; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .timeline { position: relative; align-self: stretch; }
+    .timeline::before { content: ''; position: absolute; top: 22px; left: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .appointment:not(:last-child) .timeline::after { content: ''; position: absolute; width: 1px; background: var(--line); top: 34px; bottom: -30px; left: 7px; }
+    .task { background: var(--surface); padding: 17px; border-radius: 17px; display: flex; align-items: center; gap: 12px; }
+    .task-copy { flex: 1; min-width: 0; }
+    h3 { margin: 0 0 7px; font-size: 15px; font-weight: 600; line-height: 1.4; }
+    .task p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .status { display: inline-block; margin-top: 11px; padding: 4px 8px; background: var(--sage); color: var(--green); border-radius: 6px; font-size: 10px; }
+    .avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; font-size: 10px; font-weight: 700; color: #374438; }
+    .peach { background: #edc5a9; } .sage { background: #d4dfba; } .lavender { background: #dbd0e8; } .blue { background: #cbdde2; } .sand { background: #e6d9b9; }
+    .empty { padding: 24px; background: var(--surface); border-radius: 17px; }
+    .empty h3 { margin-bottom: 8px; }
+    .empty p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; }
+    .note { font-size: 11px; line-height: 1.6; color: var(--muted); margin: 30px 0 0; }
+    .tabbar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--line); padding: 11px 20px calc(12px + env(safe-area-inset-bottom)); }
+    .tabs { max-width: 520px; margin: auto; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .tab { display: grid; place-items: center; gap: 5px; padding: 5px; font-size: 11px; color: var(--muted); }
+    .tab.active { color: var(--green); font-weight: 600; }
+    @media (max-width: 600px) {
+      .app { padding: 28px 20px 115px; max-width: 460px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 20px; }
+      .add { padding: 12px; font-size: 12px; }
+      .calendar-surface { padding: 14px 5px; }
+      .appointment { grid-template-columns: 39px 10px minmax(0, 1fr); gap: 7px; }
+      .task { padding: 15px 12px; gap: 9px; }
+      h3 { font-size: 14px; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; }
+      .day[aria-pressed='true'] .day-number { color: #18201c; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v11h-6v-8H9v8H3Z"/></symbol>
+    <symbol id="calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h1m3 0h1m3 0h1m-9 4h1m3 0h1"/></symbol>
+    <symbol id="wallet" viewBox="0 0 24 24"><path d="M20 7H5a2 2 0 0 1 0-4h13v4M3 5v14a2 2 0 0 0 2 2h15V7m0 4h-6v6h6"/></symbol>
+  </svg>
+  <main class="app">
+    <header class="page-heading"><div><p class="eyebrow">El hogar, organizado</p><h1>Calendario</h1></div><button class="add" type="button" disabled>+ Nueva tarea</button></header>
+    <section aria-labelledby="month-title">
+      <div class="calendar-heading">
+        <h2 id="month-title">Octubre de 2026</h2>
+        <button class="toggle" id="calendar-toggle" type="button" aria-label="Mostrar mes completo" aria-expanded="false" aria-controls="calendar-dates"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></button>
+      </div>
+      <div class="calendar-surface">
+        <div class="weekdays" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div>
+        <div class="dates" id="calendar-dates" role="group" aria-label="Seleccionar un día"></div>
+      </div>
+      <p class="calendar-hint" id="calendar-hint">Semana del 5 al 11 · Los puntos indican tareas.</p>
+    </section>
+    <section class="agenda" aria-labelledby="agenda-title">
+      <div class="agenda-heading"><h2 id="agenda-title">Agenda del día</h2><span class="count" id="task-count"></span></div>
+      <p class="selected-date" id="selected-date"></p>
+      <div id="agenda-content" aria-live="polite" aria-atomic="true"></div>
+    </section>
+    <p class="note">Borrador interactivo · Pulsa el icono para desplegar el mes y selecciona un día para ver su agenda. Datos de ejemplo de octubre de 2026. Crear tareas y navegar por otros meses queda fuera de esta vista previa.</p>
+  </main>
+  <nav class="tabbar" aria-label="Navegación de ejemplo"><div class="tabs">
+    <div class="tab"><svg class="icon" aria-hidden="true"><use href="#home"/></svg>Inicio</div>
+    <div class="tab active" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg>Calendario</div>
+    <div class="tab"><svg class="icon" aria-hidden="true"><use href="#wallet"/></svg>Gastos</div>
+  </div></nav>
+  <script>
+    // Local presentation state and mock data only; no application integration.
+    const tasks = [
+      { day: 5, time: '18:00', title: 'Limpiar el baño', name: 'Maya', initials: 'MA', color: 'peach' },
+      { day: 5, time: '20:00', title: 'Limpiar la encimera', name: 'Álex', initials: 'ÁL', color: 'sage' },
+      { day: 6, time: '19:00', title: 'Aspirar el salón', name: 'Sam', initials: 'SA', color: 'lavender' },
+      { day: 7, time: '20:00', title: 'Sacar el reciclaje', name: 'Dani', initials: 'DA', color: 'blue' },
+      { day: 8, time: '18:30', title: 'Limpiar la nevera', name: 'Efra', initials: 'EF', color: 'sand' },
+      { day: 9, time: '18:00', title: 'Fregar el suelo', name: 'Maya', initials: 'MA', color: 'peach' },
+      { day: 10, time: '11:00', title: 'Cambiar los paños de cocina', name: 'Álex', initials: 'ÁL', color: 'sage' },
+      { day: 10, time: '17:30', title: 'Ordenar la despensa', name: 'Efra', initials: 'EF', color: 'sand' },
+      { day: 11, time: '12:00', title: 'Regar las plantas', name: 'Efra', initials: 'EF', color: 'sand' },
+      { day: 14, time: '20:00', title: 'Sacar el reciclaje', name: 'Dani', initials: 'DA', color: 'blue' },
+      { day: 19, time: '18:00', title: 'Limpiar el baño', name: 'Sam', initials: 'SA', color: 'lavender' },
+    ];
+    let selectedDay = 10;
+    let expanded = false;
+    const dateLabel = (day) => new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(2026, 9, day));
+    const toggle = document.getElementById('calendar-toggle');
+    const dates = document.getElementById('calendar-dates');
+
+    function renderCalendar(focusDay) {
+      const weekStart = selectedDay - ((new Date(2026, 9, selectedDay).getDay() + 6) % 7);
+      const firstDay = expanded ? -2 : weekStart;
+      const length = expanded ? 35 : 7;
+      dates.innerHTML = Array.from({ length }, (_, index) => {
+        const day = firstDay + index;
+        const date = new Date(2026, 9, day);
+        const outside = date.getMonth() !== 9;
+        const count = outside ? 0 : tasks.filter((task) => task.day === day).length;
+        return `<button type="button" class="day${outside ? ' outside' : ''}${day === 10 ? ' today' : ''}" data-day="${day}" aria-pressed="${day === selectedDay}" aria-label="${dateLabel(day)}${count ? ', ' + count + (count === 1 ? ' tarea' : ' tareas') : ', sin tareas'}" ${outside ? 'disabled' : ''}><span class="day-number">${date.getDate()}</span><span class="dots" aria-hidden="true">${Array.from({ length: Math.min(count, 3) }, () => '<i class="dot"></i>').join('')}</span></button>`;
+      }).join('');
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.setAttribute('aria-label', expanded ? 'Mostrar solo la semana' : 'Mostrar mes completo');
+      document.getElementById('calendar-hint').textContent = expanded
+        ? 'Mes completo · Los puntos indican tareas.'
+        : `Semana del ${new Date(2026, 9, weekStart).getDate()} al ${new Date(2026, 9, weekStart + 6).getDate()} · Los puntos indican tareas.`;
+      if (focusDay !== undefined) dates.querySelector(`[data-day="${focusDay}"]`)?.focus();
+    }
+
+    function renderAgenda() {
+      const scheduled = tasks.filter((task) => task.day === selectedDay);
+      const label = dateLabel(selectedDay);
+      document.getElementById('selected-date').textContent = label.charAt(0).toUpperCase() + label.slice(1);
+      document.getElementById('task-count').textContent = scheduled.length + (scheduled.length === 1 ? ' tarea' : ' tareas');
+      document.getElementById('agenda-content').innerHTML = scheduled.length
+        ? `<ol class="schedule">${scheduled.map((task) => `<li class="appointment"><time class="time" datetime="2026-10-${String(task.day).padStart(2, '0')}T${task.time}">${task.time}</time><span class="timeline" aria-hidden="true"></span><article class="task"><div class="task-copy"><h3>${task.title}</h3><p>Asignada a ${task.name}</p><span class="status">Pendiente</span></div><span class="avatar ${task.color}" aria-label="${task.name}">${task.initials}</span></article></li>`).join('')}</ol>`
+        : '<div class="empty"><h3>No hay tareas para este día</h3><p>Cuando se asignen tareas a esta fecha, aparecerán aquí.</p></div>';
+    }
+
+    toggle.addEventListener('click', () => { expanded = !expanded; renderCalendar(); });
+    dates.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-day]');
+      if (!button || button.disabled) return;
+      selectedDay = Number(button.dataset.day);
+      renderCalendar(selectedDay);
+      renderAgenda();
+    });
+    renderCalendar();
+    renderAgenda();
+  </script>
+</body>
+</html>

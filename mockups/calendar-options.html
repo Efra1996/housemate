@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>Housemate — Cinco propuestas de calendario</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #fff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269;
+      --sand: #eee9dc; --line: #e5e9df;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    button:disabled { cursor: default; opacity: 1; }
+    [hidden] { display: none !important; }
+    .review-bar { padding: 24px max(20px, calc((100vw - 1056px) / 2)); background: var(--surface); border-bottom: 1px solid var(--line); }
+    .review-bar h1 { font-size: 19px; margin: 0 0 6px; }
+    .review-bar p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0 0 18px; }
+    .options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .option { border: 1px solid var(--line); background: var(--background); border-radius: 12px; padding: 11px 14px; font-size: 13px; min-height: 44px; }
+    .option[aria-pressed='true'] { background: var(--green); color: var(--surface); border-color: var(--green); }
+    .app { max-width: 1056px; padding: 32px 32px 110px; margin: auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+    .header p { color: var(--muted); font-size: 12px; margin: 0 0 6px; }
+    .header h2 { margin: 0; font-size: 30px; letter-spacing: -.8px; }
+    .add { border: 0; border-radius: 13px; background: var(--sage); color: var(--green); padding: 12px 16px; font-size: 13px; font-weight: 600; }
+    .description { font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0 0 24px; max-width: 68ch; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 16px; }
+    h3 { margin: 0; font-size: 20px; letter-spacing: -.4px; }
+    .tag { font-size: 12px; color: var(--green); }
+    .calendar { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+    .weekdays, .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .weekdays { padding: 15px 0; color: var(--muted); font-size: 12px; text-align: center; border-bottom: 1px solid var(--line); }
+    .day { min-height: 88px; padding: 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 13px; }
+    .day:nth-child(7n) { border-right: 0; }
+    .day:nth-last-child(-n+7) { border-bottom: 0; }
+    .day.outside { color: var(--muted); background: var(--background); }
+    .day.selected { background: var(--sage); }
+    .number { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; }
+    .selected .number { color: #fff; background: #347653; font-weight: 600; }
+    .event { display: block; color: var(--green); background: var(--sage); padding: 4px 5px; margin-top: 6px; border-radius: 5px; font-size: 10px; line-height: 1.4; }
+    .selected .event { background: var(--surface); }
+    .dots { display: flex; justify-content: center; gap: 3px; margin-top: 5px; }
+    .dot { display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+    .month-footer { margin: 16px 0 0; color: var(--muted); font-size: 12px; }
+    .list { display: grid; gap: 10px; }
+    .task { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 16px; padding: 16px; }
+    .time { width: 42px; flex-shrink: 0; font-size: 12px; color: var(--muted); }
+    .task-copy { flex: 1; min-width: 0; }
+    .task h4 { margin: 0 0 5px; font-size: 14px; font-weight: 600; }
+    .task p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .avatar { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-size: 10px; font-weight: 700; color: #374438; flex-shrink: 0; }
+    .peach { background: #edc5a9; } .sage { background: #d4dfba; } .lavender { background: #dbd0e8; } .blue { background: #cbdde2; } .sand { background: #e6d9b9; }
+    .week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 22px; }
+    .week-day { display: grid; justify-items: center; gap: 8px; padding: 15px 4px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+    .week-day small { font-size: 11px; color: var(--muted); }
+    .week-day strong { font-size: 20px; font-weight: 600; }
+    .week-day.active { background: var(--sage); border-color: var(--green); }
+    .week-day.active strong { color: var(--green); }
+    .summary { background: var(--sage); color: var(--green); border-radius: 16px; padding: 17px 20px; font-size: 14px; margin: 0 0 24px; }
+    .timeline-group { display: grid; grid-template-columns: 95px 1fr; gap: 20px; margin-bottom: 24px; }
+    .date-label { padding-top: 15px; }
+    .date-label strong { display: block; font-size: 21px; margin-bottom: 5px; }
+    .date-label span { color: var(--muted); font-size: 12px; }
+    .date-label.today strong { color: var(--green); }
+    .household { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .person { background: var(--surface); border: 1px solid var(--line); border-radius: 19px; padding: 18px; }
+    .person-header { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .person-header h4 { margin: 0 0 4px; font-size: 15px; }
+    .person-header p { margin: 0; font-size: 12px; color: var(--muted); }
+    .person-task { border-top: 1px solid var(--line); padding: 13px 0 0; margin-top: 13px; }
+    .person-task strong { display: block; font-size: 13px; font-weight: 600; line-height: 1.4; }
+    .person-task span { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .hybrid { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 28px; }
+    .compact .day { min-height: 51px; padding: 5px; text-align: center; }
+    .compact .event { display: none; }
+    .mini-heading { margin: 22px 0 14px; font-size: 15px; }
+    .note { margin: 30px 0 0; font-size: 11px; line-height: 1.6; color: var(--muted); }
+    .tabbar { position: fixed; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); background: var(--surface); padding: 11px 20px calc(12px + env(safe-area-inset-bottom)); }
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 520px; margin: auto; }
+    .tab { display: grid; place-items: center; gap: 6px; font-size: 11px; color: var(--muted); padding: 5px; }
+    .tab.active { color: var(--green); font-weight: 600; }
+    .tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    @media (max-width: 700px) {
+      .review-bar { padding: 20px; }
+      .options { gap: 6px; }
+      .option { padding: 10px; font-size: 12px; }
+      .app { max-width: 460px; padding: 25px 20px 115px; }
+      .header h2 { font-size: 28px; }
+      .header { margin-bottom: 20px; }
+      .description { font-size: 13px; }
+      .day { min-height: 68px; padding: 5px 3px; font-size: 12px; }
+      .event { font-size: 9px; padding: 3px; overflow-wrap: anywhere; }
+      .weekdays { font-size: 10px; }
+      h3 { font-size: 18px; }
+      .week-strip { gap: 4px; }
+      .week-day { padding: 12px 2px; border-radius: 13px; }
+      .week-day strong { font-size: 17px; }
+      .timeline-group { grid-template-columns: 55px minmax(0, 1fr); gap: 12px; }
+      .date-label strong { font-size: 18px; }
+      .task { gap: 9px; padding: 13px; }
+      .timeline-group .task { flex-wrap: wrap; }
+      .timeline-group .time { width: 100%; }
+      .household { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+      .person { padding: 16px; }
+      .hybrid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+      .compact .day { min-height: 43px; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --sand: #3b372c; --line: #37463b; }
+      .option[aria-pressed='true'] { color: #18201c; }
+    }
+  </style>
+</head>
+<body>
+  <header class="review-bar">
+    <h1>Cinco formas de organizar las tareas</h1>
+    <p>Selecciona una propuesta para comparar. Borrador visual: los únicos controles funcionales son estos selectores.</p>
+    <div class="options" role="group" aria-label="Propuestas de calendario">
+      <button class="option" type="button" data-option="month" aria-controls="month" aria-pressed="true">1. Mensual</button>
+      <button class="option" type="button" data-option="week" aria-controls="week" aria-pressed="false">2. Semanal</button>
+      <button class="option" type="button" data-option="agenda" aria-controls="agenda" aria-pressed="false">3. Agenda</button>
+      <button class="option" type="button" data-option="people" aria-controls="people" aria-pressed="false">4. Por persona</button>
+      <button class="option" type="button" data-option="hybrid" aria-controls="hybrid" aria-pressed="false">5. Mes + agenda</button>
+    </div>
+  </header>
+  <main class="app">
+    <header class="header"><div><p>El hogar, organizado</p><h2>Calendario</h2></div><button class="add" type="button" disabled>+ Nueva tarea</button></header>
+
+    <section id="month" class="proposal" aria-labelledby="month-title">
+      <div class="section-title"><h3 id="month-title">Octubre de 2026</h3><span class="tag">Vista mensual</span></div>
+      <p class="description">Todo el mes de un vistazo. Cada tarea aparece directamente en su día para ayudarte a repartir la carga.</p>
+      <div class="calendar" data-month="full"></div>
+      <p class="month-footer">Día seleccionado: lunes 5 · 2 tareas pendientes</p>
+      <h4 class="mini-heading">Lunes, 5 de octubre</h4>
+      <div class="list" data-tasks="today"></div>
+    </section>
+
+    <section id="week" class="proposal" aria-labelledby="week-title" hidden>
+      <div class="section-title"><h3 id="week-title">Del 5 al 11 de octubre</h3><span class="tag">Vista semanal</span></div>
+      <p class="description">Una semana a la vez. Los días quedan al alcance del pulgar y las tareas del día seleccionado tienen más espacio.</p>
+      <div class="week-strip" aria-label="Semana del 5 al 11 de octubre">
+        <div class="week-day active"><small>Lun</small><strong>5</strong><div class="dots"><i class="dot"></i><i class="dot"></i></div></div>
+        <div class="week-day"><small>Mar</small><strong>6</strong><div class="dots"><i class="dot"></i></div></div>
+        <div class="week-day"><small>Mié</small><strong>7</strong><div class="dots"><i class="dot"></i></div></div>
+        <div class="week-day"><small>Jue</small><strong>8</strong><div class="dots"><i class="dot"></i></div></div>
+        <div class="week-day"><small>Vie</small><strong>9</strong><div class="dots"><i class="dot"></i></div></div>
+        <div class="week-day"><small>Sáb</small><strong>10</strong><div class="dots"><i class="dot"></i></div></div>
+        <div class="week-day"><small>Dom</small><strong>11</strong><div class="dots"><i class="dot"></i></div></div>
+      </div>
+      <p class="summary">Hoy nos encargamos del baño y la cocina.</p>
+      <div class="section-title"><h3>Lunes, 5 de octubre</h3><span class="tag">2 tareas</span></div>
+      <div class="list" data-tasks="today"></div>
+      <h4 class="mini-heading">Mañana</h4><div class="list" data-tasks="tomorrow"></div>
+    </section>
+
+    <section id="agenda" class="proposal" aria-labelledby="agenda-title" hidden>
+      <div class="section-title"><h3 id="agenda-title">Próximos días</h3><span class="tag">Vista de agenda</span></div>
+      <p class="description">Sin cuadrículas. Una lista cronológica que prioriza qué toca hacer y quién se encarga, especialmente cómoda en móvil.</p>
+      <div class="timeline-group"><div class="date-label today"><strong>Hoy</strong><span>5 oct.</span></div><div class="list" data-tasks="today"></div></div>
+      <div class="timeline-group"><div class="date-label"><strong>Mar 6</strong><span>Octubre</span></div><div class="list" data-tasks="tomorrow"></div></div>
+      <div class="timeline-group"><div class="date-label"><strong>Mié 7</strong><span>Octubre</span></div><div class="list" data-tasks="wednesday"></div></div>
+      <div class="timeline-group"><div class="date-label"><strong>Jue 8</strong><span>Octubre</span></div><div class="list" data-tasks="thursday"></div></div>
+    </section>
+
+    <section id="people" class="proposal" aria-labelledby="people-title" hidden>
+      <div class="section-title"><h3 id="people-title">Esta semana, entre cinco</h3><span class="tag">5–11 oct.</span></div>
+      <p class="description">Las responsabilidades, por persona. Útil para comprobar el reparto semanal; las fechas acompañan a cada tarea en lugar de dominar la pantalla.</p>
+      <div class="household" id="household-board"></div>
+    </section>
+
+    <section id="hybrid" class="proposal" aria-labelledby="hybrid-title" hidden>
+      <div class="section-title"><h3 id="hybrid-title">Octubre de 2026</h3><span class="tag">Mes + agenda</span></div>
+      <p class="description">Un mes compacto para orientarte y una agenda para los detalles. En móvil se apilan; en escritorio aparecen uno al lado del otro.</p>
+      <div class="hybrid">
+        <div><div class="calendar compact" data-month="compact"></div><p class="month-footer">Los puntos indican días con tareas.</p></div>
+        <div><div class="section-title"><h3>Lunes, 5 de octubre</h3><span class="tag">2 tareas</span></div><div class="list" data-tasks="today"></div><h4 class="mini-heading">Mañana</h4><div class="list" data-tasks="tomorrow"></div></div>
+      </div>
+    </section>
+    <p class="note">Datos y avatares de ejemplo · Las fechas, tareas y nombres son los mismos en las cinco propuestas. No hay conexión con la aplicación ni con Firebase.</p>
+  </main>
+  <nav class="tabbar" aria-label="Navegación de ejemplo">
+    <div class="tabs">
+      <div class="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v11h-6v-8H9v8H3Z"/></svg>Inicio</div>
+      <div class="tab active" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h1m3 0h1m3 0h1m-9 4h1m3 0h1"/></svg>Calendario</div>
+      <div class="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7H5a2 2 0 0 1 0-4h13v4M3 5v14a2 2 0 0 0 2 2h15V7m0 4h-6v6h6"/></svg>Gastos</div>
+    </div>
+  </nav>
+  <script>
+    // Static mock data shared by all five visual proposals.
+    const members = [
+      { name: 'Maya', initials: 'MA', color: 'peach' },
+      { name: 'Álex', initials: 'ÁL', color: 'sage' },
+      { name: 'Sam', initials: 'SA', color: 'lavender' },
+      { name: 'Dani', initials: 'DA', color: 'blue' },
+      { name: 'Efra', initials: 'EF', color: 'sand' },
+    ];
+    const tasks = [
+      { day: 5, time: '18:00', title: 'Limpiar el baño', short: 'Baño', member: 0 },
+      { day: 5, time: '20:00', title: 'Limpiar la encimera', short: 'Cocina', member: 1 },
+      { day: 6, time: '19:00', title: 'Aspirar el salón', short: 'Salón', member: 2 },
+      { day: 7, time: '20:00', title: 'Sacar el reciclaje', short: 'Reciclaje', member: 3 },
+      { day: 8, time: '18:30', title: 'Limpiar la nevera', short: 'Nevera', member: 4 },
+      { day: 9, time: '18:00', title: 'Fregar el suelo', short: 'Suelo', member: 0 },
+      { day: 10, time: '11:00', title: 'Cambiar los paños', short: 'Paños', member: 1 },
+      { day: 11, time: '12:00', title: 'Regar las plantas', short: 'Plantas', member: 4 },
+    ];
+    const avatar = (member) => `<span class="avatar ${member.color}" aria-label="${member.name}">${member.initials}</span>`;
+    const groups = { today: 5, tomorrow: 6, wednesday: 7, thursday: 8 };
+    document.querySelectorAll('[data-tasks]').forEach((list) => {
+      list.innerHTML = tasks.filter((task) => task.day === groups[list.dataset.tasks]).map((task) => {
+        const member = members[task.member];
+        return `<article class="task"><time class="time" datetime="2026-10-${String(task.day).padStart(2, '0')}T${task.time}">${task.time}</time><div class="task-copy"><h4>${task.title}</h4><p>${member.name} · Pendiente</p></div>${avatar(member)}</article>`;
+      }).join('');
+    });
+    document.querySelectorAll('[data-month]').forEach((calendar) => {
+      const weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      const cells = Array.from({ length: 35 }, (_, index) => {
+        const day = index - 2;
+        const outside = day < 1 || day > 31;
+        const label = day < 1 ? day + 30 : day > 31 ? day - 31 : day;
+        const dayTasks = outside ? [] : tasks.filter((task) => task.day === day);
+        const content = calendar.dataset.month === 'compact'
+          ? `<div class="dots">${dayTasks.map(() => '<i class="dot"></i>').join('')}</div>`
+          : dayTasks.map((task) => `<span class="event">${task.short}</span>`).join('');
+        return `<div class="day${outside ? ' outside' : ''}${day === 5 ? ' selected' : ''}" aria-label="${label} ${day < 1 ? 'de septiembre' : day > 31 ? 'de noviembre' : 'de octubre'}${dayTasks.length ? ', ' + dayTasks.length + ' tareas' : ''}"><span class="number">${label}</span>${content}</div>`;
+      });
+      calendar.innerHTML = `<div class="weekdays">${weekdays.map((day) => `<span>${day}</span>`).join('')}</div><div class="month-grid">${cells.join('')}</div>`;
+    });
+    document.getElementById('household-board').innerHTML = members.map((member, index) => {
+      const assigned = tasks.filter((task) => task.member === index);
+      return `<article class="person"><header class="person-header">${avatar(member)}<div><h4>${member.name}</h4><p>${assigned.length} ${assigned.length === 1 ? 'tarea pendiente' : 'tareas pendientes'}</p></div></header>${assigned.map((task) => `<div class="person-task"><strong>${task.title}</strong><span>${task.day} oct. · ${task.time}</span></div>`).join('')}</article>`;
+    }).join('');
+    document.querySelectorAll('[data-option]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-option]').forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
+        document.querySelectorAll('.proposal').forEach((proposal) => { proposal.hidden = proposal.id !== button.dataset.option; });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<ion-modal [isOpen]="task() !== null" [canDismiss]="!saving()" (didDismiss)="dismissed.emit()" aria-labelledby="task-detail-title">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title id="task-detail-title">Detalle de tarea</ion-title>
+        <ion-buttons slot="end">
+          <ion-button aria-label="Cerrar" [disabled]="saving()" (click)="close()">
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      @if (task(); as selectedTask) {
+        <div class="detail-content">
+          <h2>{{ selectedTask.task }}</h2>
+          <dl class="details">
+            <div>
+              <dt>Responsable</dt>
+              <dd class="assignee">
+                @if (mate(); as assignedMate) {
+                  <ion-avatar [class]="'avatar avatar--' + avatarColor()" aria-hidden="true"><span>{{ assignedMate.avatar }}</span></ion-avatar>
+                }
+                <span>{{ mate()?.nombre ?? selectedTask.mate }}</span>
+              </dd>
+            </div>
+            <div><dt>Fecha límite</dt><dd><time [attr.datetime]="deadlineKey()">{{ deadlineLabel() }}</time></dd></div>
+          </dl>
+          <div class="status-control">
+            <ion-toggle justify="space-between" [checked]="completed()" [disabled]="saving()"
+              (ionChange)="changeCompleted($event.detail.checked)">
+              <strong>Completada</strong><p>Actívala cuando hayas terminado.</p>
+            </ion-toggle>
+          </div>
+          <p class="draft-message" role="status">{{ draftMessage() }}</p>
+          @if (error()) { <p class="error-message" role="alert">{{ error() }}</p> }
+        </div>
+      }
+    </ion-content>
+    <ion-footer class="ion-no-border">
+      <div class="detail-footer">
+        <ion-button fill="outline" [disabled]="saving()" (click)="close()">Cancelar</ion-button>
+        <ion-button [disabled]="!canSave()" (click)="save()">
+          @if (saving()) { <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner> }
+          {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+        </ion-button>
+      </div>
+    </ion-footer>
+  </ng-template>
+</ion-modal>

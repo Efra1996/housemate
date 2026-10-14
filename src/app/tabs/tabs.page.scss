@@ -1,0 +1,25 @@
+
+ion-tab-bar {
+  padding-top: 8px;
+  padding-bottom: max(12px, var(--ion-safe-area-bottom, 0px));
+  border-top: 1px solid var(--housemate-line);
+}
+
+ion-tab-button {
+  max-width: 174px;
+  min-height: 48px;
+  --background: var(--housemate-surface);
+
+  ion-icon {
+    font-size: 22px;
+    margin-bottom: 5px;
+  }
+
+  ion-label {
+    font-size: 11px;
+  }
+
+  &.tab-selected ion-label {
+    font-weight: 600;
+  }
+}

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Organizar semana</title>
+  <style>
+    :root {
+      color-scheme: light; --background: #f6f7f2; --surface: #fff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif; color: var(--ink); background: var(--background);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .55; }
+    button, input, select { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    .review { max-width: 780px; margin: 50px auto; padding: 0 24px; }
+    .review h1 { font-size: 29px; letter-spacing: -.6px; margin: 0 0 12px; }
+    .review p { color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 65ch; }
+    .review-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 28px 0; }
+    .review-controls label { flex: 1; min-width: 200px; }
+    .review-controls select { margin-top: 8px; }
+    .button { min-height: 46px; padding: 12px 20px; border: 0; border-radius: 13px; background: var(--green); color: #fff; font-weight: 600; font-size: 14px; }
+    .button.secondary { background: var(--sage); color: var(--green); }
+    .button.plain { background: transparent; color: var(--green); padding-left: 0; }
+    .screen-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .screen-card { border: 1px solid var(--line); border-radius: 18px; padding: 22px; background: var(--surface); }
+    .screen-card h2 { margin: 0 0 10px; font-size: 18px; }
+    .screen-card p { font-size: 13px; margin: 0 0 10px; }
+    dialog { width: min(620px, calc(100vw - 40px)); max-height: min(850px, calc(100dvh - 48px)); border: 0; padding: 0; border-radius: 24px; color: var(--ink); background: var(--background); overflow: hidden; }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    .modal-shell { display: flex; flex-direction: column; max-height: min(850px, calc(100dvh - 48px)); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 25px 26px 18px; gap: 12px; border-bottom: 1px solid var(--line); }
+    .modal-header h2 { margin: 0; font-size: 23px; letter-spacing: -.5px; font-weight: 650; }
+    .modal-header p { margin: 5px 0 0; font-size: 12px; color: var(--muted); }
+    .close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--surface); color: var(--ink); font-size: 25px; }
+    .modal-body { overflow-y: auto; padding: 24px 26px; }
+    .modal-footer { padding: 16px 26px calc(18px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+    .modal-footer .button { width: 100%; }
+    .modal-footer p { font-size: 11px; line-height: 1.5; margin: 9px 0 0; text-align: center; color: var(--muted); }
+    .steps { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; font-size: 12px; color: var(--muted); }
+    .step { display: flex; align-items: center; gap: 7px; }
+    .step b { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 50%; background: var(--line); font-weight: 600; }
+    .step.active { color: var(--green); font-weight: 600; }
+    .step.active b { background: var(--sage); }
+    .step-line { height: 1px; background: var(--line); flex: 1; }
+    h3 { font-size: 17px; font-weight: 650; margin: 0 0 9px; }
+    .help { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0 0 17px; }
+    label, legend { font-size: 13px; }
+    select, input[type='date'] { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+    input[type='checkbox'] { width: 20px; height: 20px; accent-color: var(--green); }
+    .week-input { display: block; margin-bottom: 5px; }
+    .week-input input { margin-top: 9px; }
+    .date-range { font-size: 12px; color: var(--green); margin: 10px 0 25px; }
+    fieldset { border: 0; padding: 0; margin: 0; }
+    legend { font-size: 17px; font-weight: 650; margin-bottom: 9px; }
+    .mate-list { display: grid; gap: 9px; }
+    .mate-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 14px; padding: 13px 15px; cursor: pointer; }
+    .mate-name { flex: 1; }
+    .mate-name strong { display: block; font-size: 14px; font-weight: 600; }
+    .mate-name span { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 11px; color: #374438; flex-shrink: 0; }
+    .peach { background: #edc5a9; } .sage { background: #d4dfba; } .lavender { background: #dbd0e8; } .blue { background: #cbdde2; } .sand { background: #e6d9b9; }
+    .callout { background: var(--sage); color: var(--green); padding: 15px 17px; border-radius: 15px; font-size: 12px; line-height: 1.7; margin: 18px 0 0; }
+    .summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--sage); border-radius: 17px; padding: 18px; margin-bottom: 20px; }
+    .summary strong { font-size: 15px; font-weight: 600; }
+    .summary p { color: var(--green); font-size: 12px; margin: 6px 0 0; }
+    .preview-list { display: grid; gap: 13px; }
+    .assignment { background: var(--surface); padding: 17px; border-radius: 17px; }
+    .assignment h4 { margin: 0 0 13px; font-size: 15px; font-weight: 600; }
+    .assignment-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .assignment-fields label { font-size: 11px; color: var(--muted); }
+    .assignment-fields select, .assignment-fields input { margin-top: 7px; font-size: 13px; }
+    .skipped { font-size: 12px; color: var(--muted); line-height: 1.6; padding: 16px; border: 1px dashed var(--line); border-radius: 14px; margin-top: 13px; }
+    .state { padding: 24px 0; }
+    .state h3 { font-size: 21px; }
+    .state p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .form-message { font-size: 12px; line-height: 1.6; color: var(--green); margin-top: 14px; }
+    .demo-note { font-size: 11px !important; }
+    @media (max-width: 600px) {
+      .review { margin: 30px auto; }
+      .screen-cards { grid-template-columns: 1fr; }
+      dialog { width: 100%; max-width: none; max-height: 94dvh; margin: auto 0 0; border-radius: 24px 24px 0 0; }
+      .modal-shell { max-height: 94dvh; }
+      .modal-header { padding: 21px 20px 16px; }
+      .modal-body { padding: 20px; }
+      .modal-footer { padding-left: 20px; padding-right: 20px; }
+      .modal-header h2 { font-size: 22px; }
+      .assignment { padding: 15px; }
+      .assignment-fields { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; }
+      .button:not(.secondary):not(.plain) { color: #18201c; }
+    }
+  </style>
+</head>
+<body>
+  <main class="review">
+    <h1>Organizar semana</h1>
+    <p>Un modal con dos pasos: elegir quién está disponible y revisar el reparto antes de guardarlo. En móvil se presenta como una hoja; en escritorio, como una ventana centrada.</p>
+    <div class="review-controls">
+      <label for="scenario">Ejemplo para revisar<select id="scenario"><option value="five">Cinco disponibles</option><option value="four">Cuatro disponibles</option><option value="three">Tres disponibles, ambos baños</option><option value="same-group">Tres disponibles, mismo baño</option><option value="two">Dos disponibles, baños distintos</option><option value="one">Una persona disponible</option><option value="away">Todos de vacaciones</option><option value="existing">Semana ya organizada</option></select></label>
+      <button class="button" type="button" id="open-modal">Abrir formulario</button>
+    </div>
+    <div class="screen-cards">
+      <section class="screen-card"><h2>Disponibilidad</h2><p>Semana, integrantes disponibles y contexto del reparto.</p><button class="button plain" type="button" id="open-input">Ver primer paso</button></section>
+      <section class="screen-card"><h2>Revisar y guardar</h2><p>Responsables editables, fechas límite y tareas que se omiten.</p><button class="button plain" type="button" id="open-preview">Ver segundo paso</button></section>
+    </div>
+    <p class="demo-note">Borrador HTML inspirado en ion-modal, ion-checkbox, ion-select e ion-datetime. Sin librerías externas ni conexión con Firebase. Los repartos son ejemplos fijos, no el algoritmo definitivo.</p>
+  </main>
+
+  <dialog id="organizer" aria-labelledby="modal-title">
+    <div class="modal-shell">
+      <header class="modal-header"><div><h2 id="modal-title">Organizar semana</h2><p id="modal-subtitle">Primero, quién está en casa.</p></div><button class="close" type="button" id="close-modal" aria-label="Cerrar">×</button></header>
+      <div class="modal-body">
+        <div class="steps" aria-label="Pasos del formulario"><span class="step active" id="input-step"><b>1</b> Disponibilidad</span><span class="step-line" aria-hidden="true"></span><span class="step" id="preview-step"><b>2</b> Revisar</span></div>
+        <section id="input-panel">
+          <label class="week-input" for="week-date">Elige una fecha de la semana<input type="date" id="week-date" value="2026-10-12"></label>
+          <p class="date-range" id="week-range">Del lunes 12 al domingo 18 de octubre</p>
+          <fieldset><legend>¿Quién está disponible?</legend><p class="help">Marca solo a quienes estarán disponibles toda la semana. Se revisarán los cuatro últimos repartos semanales.</p><div class="mate-list" id="mates"></div></fieldset>
+          <div class="callout" id="availability-note">Cuatro tareas para repartir. Una persona podrá descansar esta semana.</div>
+          <p class="form-message" id="input-message" role="status"></p>
+        </section>
+        <section id="preview-panel" hidden>
+          <div class="summary"><div><strong id="preview-range">Semana del 12 de octubre</strong><p id="preview-summary">4 tareas · 5 disponibles</p></div><span class="avatar sage" aria-hidden="true">✓</span></div>
+          <h3>Propuesta de reparto</h3><p class="help">Revisa responsables y fechas. Solo aparecen compañeros disponibles que pueden realizar esa tarea.</p>
+          <div class="preview-list" id="assignments"></div><div id="skipped"></div>
+          <div class="callout">Cada tarea cuenta igual. La propuesta definitiva considerará las asignaciones guardadas de las cuatro semanas anteriores.</div>
+          <button class="button plain" type="button" id="back-input">Cambiar disponibilidad</button>
+          <p class="form-message" id="preview-message" role="status"></p>
+        </section>
+        <section class="state" id="state-panel" hidden><h3 id="state-title"></h3><p id="state-copy"></p><div id="existing-list"></div></section>
+      </div>
+      <footer class="modal-footer"><button class="button" type="button" id="primary-action">Generar propuesta</button><p id="footer-note">No se guardará nada hasta que confirmes el reparto.</p></footer>
+    </div>
+  </dialog>
+  <script>
+    // Fixed UI scenarios only. The production scheduler is intentionally not implemented.
+    const mates = [
+      { id: 'mate-1', name: 'Efra', avatar: 'E', color: 'peach', group: 'Baño A' },
+      { id: 'mate-2', name: 'David', avatar: 'D', color: 'sage', group: 'Baño A' },
+      { id: 'mate-3', name: 'Ainara', avatar: 'A', color: 'lavender', group: 'Baño A' },
+      { id: 'mate-4', name: 'Izaro', avatar: 'I', color: 'blue', group: 'Baño B' },
+      { id: 'mate-5', name: 'Marcela', avatar: 'M', color: 'sand', group: 'Baño B' },
+    ];
+    const chores = [
+      { id: 'bathroom-a', title: 'Limpiar el baño A', eligible: [1, 2, 3] },
+      { id: 'bathroom-b', title: 'Limpiar el baño B', eligible: [4, 5] },
+      { id: 'kitchen', title: 'Limpiar la cocina', eligible: [1, 2, 3, 4, 5] },
+      { id: 'hallway', title: 'Limpiar el pasillo', eligible: [1, 2, 3, 4, 5] },
+    ];
+    const scenarios = {
+      five: { available: [1, 2, 3, 4, 5], assignments: [1, 4, 2, 5], note: 'Cuatro tareas para repartir. Ainara descansa en este ejemplo.' },
+      four: { available: [1, 2, 4, 5], assignments: [1, 4, 2, 5], note: 'Una tarea por persona; ambos baños tienen usuarios disponibles.' },
+      three: { available: [1, 2, 4], assignments: [1, 4, 2, 1], note: 'Efra limpia su baño y el pasillo. David se encarga de la cocina.' },
+      'same-group': { available: [1, 2, 3], assignments: [1, null, 2, 3], note: 'Se omite el baño B. Las tres tareas restantes se reparten una por persona.' },
+      two: { available: [1, 4], assignments: [1, null, 4, 1], note: 'Se elige un solo baño. Efra limpia el baño A y el pasillo; Izaro, la cocina.' },
+      one: { available: [5], assignments: [null, 5, null, null], note: 'Una única tarea elegible para Marcela. Las demás se omiten esta semana.' },
+      away: { available: [], assignments: [null, null, null, null], note: 'Nadie está disponible. Esta semana se omite sin crear tareas.' },
+      existing: { available: [1, 2, 3, 4, 5], assignments: [1, 4, 2, 5], note: 'Ya hay tareas guardadas. No se generará un reparto que las sobrescriba.' },
+    };
+    const dialog = document.getElementById('organizer');
+    const scenarioSelect = document.getElementById('scenario');
+    const primary = document.getElementById('primary-action');
+    let step = 'input';
+    const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    function week() {
+      const value = document.getElementById('week-date').value;
+      if (!value) return null;
+      const start = new Date(value + 'T12:00:00');
+      if (!Number.isFinite(start.getTime())) return null;
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+      const end = new Date(start); end.setDate(start.getDate() + 6);
+      return { start, end };
+    }
+    const formatDate = (date) => new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' }).format(date);
+    function updateWeekLabel() {
+      const selected = week();
+      document.getElementById('week-range').textContent = selected ? `Del lunes ${formatDate(selected.start)} al domingo ${formatDate(selected.end)}` : 'Elige una fecha válida.';
+    }
+    function showStep(next) {
+      step = next;
+      document.getElementById('input-panel').hidden = next !== 'input';
+      document.getElementById('preview-panel').hidden = next !== 'preview';
+      document.getElementById('state-panel').hidden = next !== 'state';
+      document.getElementById('input-step').classList.toggle('active', next === 'input');
+      document.getElementById('preview-step').classList.toggle('active', next !== 'input');
+      document.getElementById('modal-subtitle').textContent = next === 'input' ? 'Primero, quién está en casa.' : 'Revisa antes de guardar.';
+      primary.textContent = next === 'input' ? 'Generar propuesta' : next === 'preview' ? 'Guardar semana' : 'Cerrar';
+      document.getElementById('footer-note').textContent = next === 'preview' ? 'Borrador: guardar no escribe en la base de datos.' : 'No se guardará nada hasta que confirmes el reparto.';
+      document.querySelector('.modal-body').scrollTop = 0;
+    }
+    function renderPreview() {
+      const scenario = scenarios[scenarioSelect.value];
+      const selected = week();
+      if (!selected) { document.getElementById('input-message').textContent = 'Elige una fecha para continuar.'; return; }
+      const checked = Array.from(document.querySelectorAll('[data-mate]:checked'), (input) => Number(input.dataset.mate));
+      if (JSON.stringify(checked) !== JSON.stringify(scenario.available)) {
+        document.getElementById('input-message').textContent = 'Este borrador usa repartos fijos. Cierra el modal y elige otro ejemplo para revisar una disponibilidad distinta.';
+        return;
+      }
+      if (scenarioSelect.value === 'away' || scenarioSelect.value === 'existing') {
+        const existing = scenarioSelect.value === 'existing';
+        document.getElementById('state-title').textContent = existing ? 'Esta semana ya está organizada' : 'Esta semana, sin tareas';
+        document.getElementById('state-copy').textContent = existing ? 'Las asignaciones existentes se conservan. Podrás modificarlas individualmente desde el calendario en una próxima tarea.' : 'Todos están fuera. No se crearán asignaciones ni cambiará el historial.';
+        document.getElementById('existing-list').textContent = existing ? 'Ejemplo: baño A — Efra; baño B — Izaro; cocina — David; pasillo — Marcela.' : '';
+        showStep('state'); return;
+      }
+      document.getElementById('preview-range').textContent = `Semana del ${formatDate(selected.start)}`;
+      document.getElementById('preview-summary').textContent = `${scenario.assignments.filter(Boolean).length} tareas · ${scenario.available.length} disponibles`;
+      document.getElementById('assignments').innerHTML = chores.map((chore, index) => {
+        const assigned = scenario.assignments[index];
+        if (!assigned) return '';
+        const eligible = scenario.available.filter((id) => chore.eligible.includes(id));
+        return `<article class="assignment"><h4>${chore.title}</h4><div class="assignment-fields"><label>Responsable<select aria-label="Responsable de ${chore.title}">${eligible.map((id) => `<option value="${id}" ${id === assigned ? 'selected' : ''}>${mates[id - 1].name}</option>`).join('')}</select></label><label>Fecha límite<input type="date" value="${dateKey(selected.end)}" min="${dateKey(selected.start)}" max="${dateKey(selected.end)}" required aria-label="Fecha límite de ${chore.title}"></label></div></article>`;
+      }).join('');
+      const skipped = chores.filter((_, index) => !scenario.assignments[index]);
+      document.getElementById('skipped').innerHTML = skipped.length ? `<p class="skipped">Se omiten esta semana: ${skipped.map((chore) => chore.title.toLocaleLowerCase('es')).join(', ')}.</p>` : '';
+      document.getElementById('preview-message').textContent = '';
+      showStep('preview');
+    }
+    function open(stepRequested) {
+      const scenario = scenarios[scenarioSelect.value];
+      document.getElementById('mates').innerHTML = mates.map((mate, index) => `<label class="mate-row"><span class="avatar ${mate.color}" aria-hidden="true">${mate.avatar}</span><span class="mate-name"><strong>${mate.name}</strong><span>${mate.group}</span></span><input type="checkbox" data-mate="${index + 1}" aria-label="${mate.name} disponible" ${scenario.available.includes(index + 1) ? 'checked' : ''}></label>`).join('');
+      document.getElementById('availability-note').textContent = scenario.note;
+      document.getElementById('input-message').textContent = '';
+      updateWeekLabel(); showStep('input'); dialog.showModal();
+      if (stepRequested === 'preview') renderPreview();
+    }
+    document.getElementById('open-modal').addEventListener('click', () => open('input'));
+    document.getElementById('open-input').addEventListener('click', () => open('input'));
+    document.getElementById('open-preview').addEventListener('click', () => open('preview'));
+    document.getElementById('close-modal').addEventListener('click', () => dialog.close());
+    document.getElementById('back-input').addEventListener('click', () => showStep('input'));
+    document.getElementById('week-date').addEventListener('change', updateWeekLabel);
+    primary.addEventListener('click', () => {
+      if (step === 'input') renderPreview();
+      else if (step === 'state') dialog.close();
+      else {
+        const dates = Array.from(document.querySelectorAll('#assignments input'));
+        if (!dates.every((input) => input.reportValidity())) return;
+        document.getElementById('preview-message').textContent = 'Vista previa confirmada. No se ha guardado ningún dato; este archivo solo muestra el diseño.';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<ion-modal [isOpen]="isOpen()" [canDismiss]="!saving()" (didDismiss)="dismissed.emit()" aria-labelledby="organizer-title">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title id="organizer-title">Organizar semana</ion-title>
+        <ion-buttons slot="end"><ion-button aria-label="Cerrar" [disabled]="saving()" (click)="dismissed.emit()"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="form-content">
+        <ol class="steps" aria-label="Pasos del formulario">
+          <li [class.active]="step() === 'availability'" [attr.aria-current]="step() === 'availability' ? 'step' : null">Disponibilidad</li>
+          <li [class.active]="step() === 'review'" [attr.aria-current]="step() === 'review' ? 'step' : null">Revisar</li>
+        </ol>
+
+        @if (loading()) {
+          <p class="callout" role="status"><ion-spinner name="crescent" aria-hidden="true"></ion-spinner> Cargando tareas e historial…</p>
+        }
+        @if (error()) {
+          <div class="callout" role="alert"><p>{{ error() }}</p><ion-button fill="clear" (click)="loadInputs()">Reintentar</ion-button></div>
+        }
+        @if (existingWeek()) {
+          <p class="callout" role="status">Esta semana ya tiene tareas asignadas. No se generará una propuesta que las sustituya.</p>
+        }
+
+        @if (step() === 'availability') {
+          <form (submit)="$event.preventDefault()">
+            <ion-input class="week-input" type="date" label="Elige una fecha de la semana" labelPlacement="stacked" fill="outline"
+              [disabled]="saving()" [value]="weekDate()" (ionChange)="changeWeek($event.detail.value)"></ion-input>
+            <p class="week-label">{{ weekLabel() }}</p>
+            <h2>¿Quién está disponible?</h2>
+            <p class="help">Selecciona a quienes estarán disponibles toda la semana.</p>
+            <ion-list class="mate-list" lines="none" aria-label="Disponibilidad de los compañeros">
+              <ion-item class="all-mates">
+                <ion-checkbox justify="space-between" [disabled]="saving()" [checked]="allSelected()" [indeterminate]="partiallySelected()"
+                  (ionChange)="toggleAll($event.detail.checked)">Todos</ion-checkbox>
+              </ion-item>
+              @for (mate of mates(); track mate.id; let index = $index) {
+                <ion-item>
+                  <ion-avatar slot="start" [class]="'avatar avatar--' + avatarColor(index)" aria-hidden="true"><span>{{ mate.avatar }}</span></ion-avatar>
+                  <ion-checkbox justify="space-between" [disabled]="saving()" [checked]="selectedIds().includes(mate.id)"
+                    (ionChange)="toggleMate(mate.id, $event.detail.checked)">{{ mate.nombre }}</ion-checkbox>
+                </ion-item>
+              }
+            </ion-list>
+            <p class="callout" role="status">{{ availableMates().length }} de {{ mates().length }} compañeros seleccionados. El reparto tendrá en cuenta las cuatro semanas anteriores.</p>
+          </form>
+        } @else {
+          <ion-card class="summary"><h2>{{ weekLabel() }}</h2><p>{{ availableMates().length }} compañeros disponibles</p></ion-card>
+          <h2>Propuesta de reparto</h2>
+          <p class="help">Revisa los responsables y las fechas. Las tareas solo se crearán cuando pulses Guardar semana.</p>
+          @if (proposal()?.status === 'ready') {
+            <div class="preview-list">
+              @for (assignment of proposal()?.assignments; track assignment.choreId) {
+                <ion-card class="assignment">
+                  <h3>{{ assignment.task }}</h3>
+                  <ion-select label="Responsable" labelPlacement="stacked" fill="outline" interface="popover"
+                    [disabled]="saving()" [value]="assignment.mateId" (ionChange)="changeAssignee(assignment.choreId, $event.detail.value)"
+                    [attr.aria-label]="'Responsable de ' + assignment.task">
+                    @for (mate of eligibleMates(assignment.choreId); track mate.id) {
+                      <ion-select-option [value]="mate.id">{{ mate.nombre }}</ion-select-option>
+                    }
+                  </ion-select>
+                  <ion-input type="date" label="Fecha límite" labelPlacement="stacked" fill="outline" [disabled]="saving()" [value]="deadline(assignment)"
+                    (ionChange)="changeDeadline(assignment.choreId, $event.detail.value)"
+                    [min]="week().start" [max]="week().end" [attr.aria-label]="'Fecha límite de ' + assignment.task"></ion-input>
+                </ion-card>
+              }
+            </div>
+          } @else if (proposal()?.status === 'skipped') {
+            <ion-card class="summary"><h3>Nadie está disponible</h3><p>No se crearán tareas para esta semana. Puedes volver para cambiar la disponibilidad.</p></ion-card>
+          } @else if (proposal()?.status === 'blocked') {
+            <ion-card class="summary"><h3>No hay un reparto válido</h3><p>No se pueden repartir las tareas respetando la disponibilidad, la elegibilidad y la carga permitida.</p></ion-card>
+          }
+          @if (editError() || workloadError()) {
+            <p class="callout" role="alert">{{ editError() || workloadError() }}</p>
+          }
+          @if (saveError()) {
+            <p class="callout" role="alert">{{ saveError() }}</p>
+          }
+          @if (proposal()?.skippedChores?.length) {
+            <section class="skipped-chores" aria-labelledby="skipped-title">
+              <h2 id="skipped-title">Tareas omitidas</h2>
+              @for (skipped of proposal()?.skippedChores; track skipped.choreId) {
+                <p class="help"><strong>{{ skippedTitle(skipped.choreId) }}</strong><br>{{ skippedReason(skipped.reason) }}</p>
+              }
+            </section>
+          }
+          <ion-button fill="clear" [disabled]="saving()" (click)="changeAvailability()">Cambiar disponibilidad</ion-button>
+          <ion-button fill="clear" [disabled]="!canGenerate()" (click)="generatePreview()">Regenerar propuesta</ion-button>
+        }
+      </div>
+    </ion-content>
+    <ion-footer class="ion-no-border">
+      <div class="form-footer">
+        @if (step() === 'availability') {
+          <ion-button expand="block" [disabled]="!canGenerate()" (click)="generatePreview()">Generar propuesta</ion-button>
+        } @else {
+          <ion-button expand="block" [disabled]="!canSave()" (click)="savePreview()">
+            @if (saving()) { <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner> }
+            {{ saving() ? 'Guardando…' : 'Guardar semana' }}
+          </ion-button>
+        }
+        <p role="status">{{ saving() ? 'Espera a que se confirme el guardado.' : 'Las tareas existentes nunca se sustituirán.' }}</p>
+      </div>
+    </ion-footer>
+  </ng-template>
+</ion-modal>

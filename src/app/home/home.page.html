@@ -1,0 +1,84 @@
+<ion-content>
+  <main class="dashboard">
+    <header class="page-heading">
+      <div>
+        <p class="date"><time datetime="2026-10-05">Lunes, 5 de octubre</time></p>
+        <h1>Inicio</h1>
+      </div>
+      <div class="brand"><ion-icon name="home-outline" aria-hidden="true"></ion-icon><span>housemate</span></div>
+    </header>
+
+    <div class="members" role="group" aria-label="Integrantes del hogar" aria-live="polite" [attr.aria-busy]="matesLoading()">
+      @if (matesLoading()) {
+        <ion-spinner name="crescent" aria-label="Cargando compañeros"></ion-spinner>
+      } @else if (matesError()) {
+        <div><p>{{ matesError() }}</p><ion-button fill="clear" size="small" (click)="loadMates()">Reintentar</ion-button></div>
+      } @else if (!members().length) {
+        <p>No hay compañeros registrados.</p>
+      }
+      @for (member of members(); track member.id) {
+        <ion-avatar [class]="'avatar avatar--' + avatarColor(member.id)" [attr.title]="member.nombre" [attr.aria-label]="member.nombre"><span>{{ member.avatar }}</span></ion-avatar>
+      }
+    </div>
+
+    <ion-card class="progress-card" aria-labelledby="progress-title">
+      <div class="progress-copy">
+        <h2 id="progress-title">Entre todos, más fácil.</h2>
+        <p>3 de 10 tareas completadas esta semana</p>
+        <ion-progress-bar [value]="0.3" aria-label="Progreso semanal" aria-valuemin="0" aria-valuemax="10" aria-valuenow="3" aria-valuetext="3 de 10 tareas completadas"></ion-progress-bar>
+        <p class="caption">Pequeños pasos. Un hogar más a gusto.</p>
+      </div>
+      <svg class="house-art" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="m15 76 35-19 36 20-35 19Z" fill="#d1dbc5"/>
+        <path d="M28 45 51 29l22 16v32L51 89 28 76Z" fill="#f9f5e7"/>
+        <path d="m51 29 22 16v32L51 89Z" fill="#e5dbc1"/>
+        <path d="m20 47 31-23 31 24-8 4-23-17-23 17Z" fill="#b6c3a7"/>
+        <path d="m51 24 31 24-8 4-23-17Z" fill="#8ca582"/>
+        <path d="M37 61h10v17H37Z" fill="#b48d67"/><path d="M33 48h10v9H33Z" fill="#bdd3c4"/>
+        <path d="m58 50 9 4v10l-9-4Z" fill="#9cbaa5"/>
+        <path d="M80 65v16" stroke="#537b50" stroke-width="3"/><ellipse cx="80" cy="63" rx="9" ry="12" fill="#7d9d69"/>
+        <path d="m73 81 13 1-2 7-10-1Z" fill="#c3aa83"/>
+        <path d="M21 69v13" stroke="#537b50" stroke-width="2"/><circle cx="21" cy="68" r="7" fill="#91ab7d"/>
+      </svg>
+    </ion-card>
+
+    <div class="sections">
+      <section aria-labelledby="tasks-title">
+        <div class="section-heading"><h2 id="tasks-title">Tareas de la semana</h2><span>{{ tasksLoading() ? 'Cargando…' : tasksError() ? 'Sin conexión' : tasks().length + ' pendientes' }}</span></div>
+        <div class="record-list" aria-live="polite" [attr.aria-busy]="tasksLoading()">
+          @if (tasksLoading()) {
+            <ion-card class="record"><ion-spinner name="crescent" aria-label="Cargando tareas"></ion-spinner><div class="record-copy"><p>Cargando tareas de esta semana…</p></div></ion-card>
+          } @else if (tasksError()) {
+            <ion-card class="record"><div class="record-copy"><h3>No se pudieron cargar las tareas</h3><p>{{ tasksError() }}</p><ion-button fill="clear" size="small" (click)="loadTasks()">Reintentar</ion-button></div></ion-card>
+          } @else if (!tasks().length) {
+            <ion-card class="record"><div class="record-copy"><h3>No hay tareas pendientes esta semana</h3><p>Las tareas asignadas aparecerán aquí cuando se añadan a Firestore.</p></div></ion-card>
+          }
+          @for (task of tasks(); track task.id) {
+            @let member = taskMember(task);
+            <ion-card class="record">
+              <div class="icon-tile"><ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon></div>
+              <div class="record-copy"><h3>{{ task.task }}</h3><p>{{ taskSchedule(task) }} · {{ task.mate }}</p></div>
+              @if (member) {
+                <ion-avatar [class]="'avatar avatar--' + avatarColor(member.id)" [attr.aria-label]="'Asignada a ' + member.nombre"><span>{{ member.avatar }}</span></ion-avatar>
+              }
+            </ion-card>
+          }
+        </div>
+      </section>
+
+      <section aria-labelledby="expenses-title">
+        <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><span>Esta semana</span></div>
+        <div class="record-list">
+          @for (expense of expenses; track expense.id) {
+            <ion-card class="record">
+              <div class="icon-tile icon-tile--payment"><ion-icon [name]="expense.icon" aria-hidden="true"></ion-icon></div>
+              <div class="record-copy"><h3>{{ expense.title }}</h3><p>{{ expense.detail }}</p></div>
+              <span class="amount">{{ expense.amount }}</span>
+            </ion-card>
+          }
+        </div>
+      </section>
+    </div>
+    <p class="example-note">Las tareas y los compañeros se leen de Firestore. El progreso semanal y los gastos siguen siendo ejemplos.</p>
+  </main>
+</ion-content>

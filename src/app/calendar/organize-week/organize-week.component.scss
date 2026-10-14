@@ -1,0 +1,46 @@
+ion-modal {
+  --width: 620px;
+  --height: min(850px, 90dvh);
+  --border-radius: 24px;
+}
+ion-toolbar { --background: var(--ion-background-color); --min-height: 72px; --padding-start: 8px; --padding-end: 8px; }
+ion-title { font-size: 22px; font-weight: 650; }
+.form-content { padding: 20px 26px 24px; }
+.steps { display: flex; gap: 28px; margin: 0 0 25px; padding-left: 20px; color: var(--housemate-muted); font-size: 12px; }
+.steps .active { color: var(--ion-color-primary); font-weight: 600; }
+h2 { margin: 0 0 9px; font-size: 17px; font-weight: 650; }
+h3 { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+.help { margin: 0 0 17px; font-size: 12px; color: var(--housemate-muted); line-height: 1.6; }
+.week-label { margin: 12px 0 25px; color: var(--ion-color-primary); font-size: 12px; line-height: 1.6; }
+ion-input, ion-select { --background: var(--housemate-surface); --border-color: var(--housemate-line); --border-radius: 10px; font-size: 13px; }
+.mate-list { display: grid; gap: 9px; padding: 0; background: transparent; }
+ion-item { --background: var(--housemate-surface); --border-radius: 14px; --padding-start: 15px; --inner-padding-end: 15px; --min-height: 62px; }
+ion-checkbox { width: 100%; --size: 20px; font-size: 14px; }
+.all-mates { font-weight: 600; --background: var(--housemate-sage); }
+.avatar {
+  display: grid; place-items: center; width: 32px; height: 32px; margin-right: 12px;
+  color: #374438; font-size: 11px; font-weight: 700;
+  &--peach { background: #edc5a9; }
+  &--sage { background: #d4dfba; }
+  &--lavender { background: #dbd0e8; }
+  &--blue { background: #cbdde2; }
+  &--sand { background: #e6d9b9; }
+}
+ion-card { margin: 0; box-shadow: none; color: var(--ion-text-color); }
+.callout, .summary { padding: 18px; border-radius: 17px; background: var(--housemate-sage); font-size: 12px; line-height: 1.7; }
+.callout { margin: 18px 0 0; color: var(--housemate-progress-text); }
+.summary { --background: var(--housemate-sage); margin-bottom: 20px; }
+.summary p { margin: 0; color: var(--housemate-progress-text); }
+.preview-list { display: grid; gap: 13px; }
+.assignment { padding: 17px; border-radius: 17px; --background: var(--housemate-surface); }
+.assignment ion-input { margin-top: 12px; }
+.skipped-chores { margin-top: 24px; }
+ion-spinner { width: 18px; height: 18px; vertical-align: middle; }
+.form-footer { padding: 12px 26px calc(16px + var(--ion-safe-area-bottom, 0px)); background: var(--housemate-surface); border-top: 1px solid var(--housemate-line); }
+.form-footer ion-button { --border-radius: 13px; --box-shadow: none; text-transform: none; }
+.form-footer p { margin: 9px 0 0; font-size: 11px; color: var(--housemate-muted); text-align: center; line-height: 1.5; }
+@media (max-width: 600px) {
+  ion-modal { --width: 100%; --height: 94dvh; --border-radius: 24px 24px 0 0; align-items: flex-end; }
+  .form-content { padding: 20px; }
+  .form-footer { padding-left: 20px; padding-right: 20px; }
+}

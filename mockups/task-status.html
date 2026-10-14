@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Estado de una tarea</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df;
+      --contrast: #ffffff; --danger: #a13f35;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    button:disabled { cursor: default; opacity: .5; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    .page { max-width: 680px; margin: 48px auto; padding: 0 24px 32px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.6px; }
+    .intro { margin: 12px 0 28px; max-width: 58ch; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .agenda-heading { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .agenda-heading h2 { font-size: 20px; font-weight: 650; margin: 0; }
+    .count { color: var(--green); font-size: 12px; }
+    .date { margin: 7px 0 22px; color: var(--muted); font-size: 13px; }
+    .schedule { display: grid; gap: 16px; }
+    .appointment { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; }
+    .timeline { position: relative; }
+    .timeline::before { content: ''; position: absolute; top: 24px; left: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .appointment:not(:last-child) .timeline::after { content: ''; position: absolute; top: 36px; bottom: -28px; left: 6px; width: 1px; background: var(--line); }
+    .task-card { display: flex; align-items: center; gap: 18px; width: 100%; text-align: left; padding: 20px; border: 1px solid transparent; border-radius: 17px; background: var(--surface); color: var(--ink); }
+    .task-card:hover { border-color: var(--line); }
+    .task-copy { flex: 1; min-width: 0; }
+    .task-name { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
+    .task-meta { display: block; font-size: 12px; color: var(--muted); line-height: 1.8; }
+    .badge { display: inline-block; margin-top: 12px; padding: 4px 8px; border-radius: 6px; background: var(--sage); color: var(--green); font-size: 11px; font-weight: 500; }
+    .badge.completed::before { content: '✓ '; }
+    .avatar { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #374438; }
+    .peach { background: #edc5a9; }
+    .sand { background: #e6d9b9; }
+    .demo-controls { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .demo-controls label { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; color: var(--muted); }
+    .demo-controls input { width: 18px; height: 18px; accent-color: var(--green); }
+    .demo-note { margin: 10px 0 0; font-size: 11px; line-height: 1.7; color: var(--muted); }
+    .notice { font-size: 13px; color: var(--green); line-height: 1.6; }
+    dialog { width: min(460px, calc(100vw - 40px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); padding: 0; border: 0; border-radius: 24px; color: var(--ink); background: var(--background); overflow: auto; }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 12px; gap: 12px; }
+    .modal-header h2 { margin: 0; font-size: 19px; font-weight: 650; }
+    .close { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 27px; }
+    .modal-body { padding: 8px 26px 25px; }
+    .modal-body h3 { margin: 0 0 22px; font-size: 24px; line-height: 1.3; font-weight: 650; letter-spacing: -.4px; }
+    .details { margin: 0 0 24px; }
+    .details > div { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px 0; }
+    .details > div + div { border-top: 1px solid var(--line); }
+    dt { color: var(--muted); font-size: 12px; }
+    dd { margin: 0; font-size: 13px; text-align: right; }
+    .assignee { display: flex; align-items: center; gap: 9px; }
+    .assignee .avatar { width: 28px; height: 28px; font-size: 10px; }
+    .status-control { display: flex; align-items: center; gap: 16px; padding: 18px; background: var(--surface); border-radius: 16px; cursor: pointer; }
+    .status-copy { flex: 1; }
+    .status-copy strong { display: block; font-size: 15px; font-weight: 600; }
+    .status-copy small { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .switch { position: relative; width: 50px; height: 30px; flex-shrink: 0; }
+    .switch input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
+    .switch-track { display: block; width: 100%; height: 100%; border-radius: 20px; background: #8a958e; pointer-events: none; }
+    .switch-track::after { content: ''; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #0002; }
+    .switch input:checked + .switch-track { background: var(--green); }
+    .switch input:checked + .switch-track::after { transform: translateX(20px); }
+    .switch input:focus-visible + .switch-track { outline: 3px solid var(--green); outline-offset: 4px; }
+    .status-control:has(input:disabled) { cursor: default; opacity: .6; }
+    .save-note { margin: 12px 2px 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .error { margin: 16px 0 0; color: var(--danger); font-size: 12px; line-height: 1.6; }
+    .modal-footer { display: grid; grid-template-columns: 1fr 1.7fr; gap: 10px; padding: 16px 26px 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+    .button { min-height: 46px; border: 0; border-radius: 13px; padding: 12px 14px; font-size: 13px; font-weight: 600; }
+    .primary { color: var(--contrast); background: var(--green); }
+    .secondary { color: var(--green); background: var(--sage); }
+    @media (max-width: 600px) {
+      .page { margin-top: 30px; padding-left: 20px; padding-right: 20px; }
+      dialog { width: 100%; max-width: none; margin: auto 0 0; border-radius: 24px 24px 0 0; max-height: 94vh; max-height: 94dvh; }
+      .modal-body { padding: 8px 22px 24px; }
+      .modal-header { padding-left: 18px; padding-right: 14px; }
+      .modal-footer { padding-left: 22px; padding-right: 22px; }
+      .task-card { padding: 18px; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --contrast: #18201c; --danger: #f1aba0; }
+      .switch input:checked + .switch-track::after { background: #18201c; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Calendario</h1>
+    <p class="intro">Toca una tarea para ver sus detalles y cambiar su estado. Este borrador muestra una tarea pendiente y otra completada.</p>
+    <div class="agenda-heading"><h2>Agenda del día</h2><span class="count">2 tareas</span></div>
+    <p class="date">Domingo, 18 de octubre de 2026</p>
+    <div class="schedule">
+      <div class="appointment">
+        <span class="timeline" aria-hidden="true"></span>
+        <button class="task-card" type="button" data-task="bathroom-a" aria-haspopup="dialog" aria-controls="task-dialog">
+          <span class="task-copy"><strong class="task-name">Limpiar el baño A</strong><span class="task-meta">Asignada a Efra</span><span class="task-meta">Fecha límite: 18 de octubre</span><span class="badge" data-badge="bathroom-a">Pendiente</span></span>
+          <span class="avatar peach" aria-hidden="true">E</span>
+        </button>
+      </div>
+      <div class="appointment">
+        <span class="timeline" aria-hidden="true"></span>
+        <button class="task-card" type="button" data-task="kitchen" aria-haspopup="dialog" aria-controls="task-dialog">
+          <span class="task-copy"><strong class="task-name">Limpiar la cocina</strong><span class="task-meta">Asignada a Marcela</span><span class="task-meta">Fecha límite: 18 de octubre</span><span class="badge completed" data-badge="kitchen">Completada</span></span>
+          <span class="avatar sand" aria-hidden="true">M</span>
+        </button>
+      </div>
+    </div>
+    <p class="notice" id="page-message" role="status"></p>
+    <aside class="demo-controls" aria-label="Opciones del borrador">
+      <label><input type="checkbox" id="simulate-error">Simular un error al guardar</label>
+      <p class="demo-note">Borrador HTML inspirado en ion-modal e ion-toggle. Sin Firebase ni librerías externas. Los cambios solo duran hasta recargar esta página.</p>
+    </aside>
+  </main>
+
+  <dialog id="task-dialog" aria-labelledby="modal-heading" aria-describedby="modal-task-name">
+    <form id="task-form">
+      <header class="modal-header">
+        <h2 id="modal-heading">Detalle de tarea</h2>
+        <button class="close" type="button" id="close-modal" aria-label="Cerrar">×</button>
+      </header>
+      <div class="modal-body">
+        <h3 id="modal-task-name">Limpiar el baño A</h3>
+        <dl class="details">
+          <div><dt>Responsable</dt><dd class="assignee"><span class="avatar peach" id="modal-avatar" aria-hidden="true">E</span><span id="modal-mate">Efra</span></dd></div>
+          <div><dt>Fecha límite</dt><dd><time datetime="2026-10-18">Domingo, 18 de octubre</time></dd></div>
+        </dl>
+        <label class="status-control">
+          <span class="status-copy"><strong id="toggle-label">Completada</strong><small id="toggle-help">Actívala cuando hayas terminado.</small></span>
+          <span class="switch"><input type="checkbox" role="switch" id="completed" aria-labelledby="toggle-label" aria-describedby="toggle-help"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <p class="save-note" id="draft-message" role="status">La tarea sigue pendiente.</p>
+        <p class="error" id="save-error" role="alert" hidden>No se pudieron guardar los cambios. Tu selección se mantiene; vuelve a intentarlo.</p>
+      </div>
+      <footer class="modal-footer">
+        <button class="button secondary" type="button" id="cancel-modal">Cancelar</button>
+        <button class="button primary" type="submit" id="save-task" disabled>Guardar cambios</button>
+      </footer>
+    </form>
+  </dialog>
+  <script>
+    // In-memory examples only. Nothing is sent to the application or a database.
+    const tasks = [
+      { id: 'bathroom-a', title: 'Limpiar el baño A', mate: 'Efra', avatar: 'E', color: 'peach', completed: false },
+      { id: 'kitchen', title: 'Limpiar la cocina', mate: 'Marcela', avatar: 'M', color: 'sand', completed: true },
+    ];
+    const dialog = document.getElementById('task-dialog');
+    const toggle = document.getElementById('completed');
+    const saveButton = document.getElementById('save-task');
+    const draftMessage = document.getElementById('draft-message');
+    const saveError = document.getElementById('save-error');
+    const closeButton = document.getElementById('close-modal');
+    const cancelButton = document.getElementById('cancel-modal');
+    let currentTask = null;
+    let saving = false;
+
+    function updateDraft() {
+      saveButton.disabled = saving || toggle.checked === currentTask.completed;
+      const changed = toggle.checked !== currentTask.completed;
+      draftMessage.textContent = changed
+        ? (toggle.checked ? 'Se marcará como completada al guardar.' : 'Volverá a estar pendiente al guardar.')
+        : (currentTask.completed ? 'La tarea está completada. Desactívala para dejarla pendiente.' : 'La tarea sigue pendiente.');
+    }
+
+    function openTask(id) {
+      currentTask = tasks.find(task => task.id === id);
+      document.getElementById('modal-task-name').textContent = currentTask.title;
+      document.getElementById('modal-mate').textContent = currentTask.mate;
+      const avatar = document.getElementById('modal-avatar');
+      avatar.textContent = currentTask.avatar;
+      avatar.className = `avatar ${currentTask.color}`;
+      toggle.checked = currentTask.completed;
+      saveError.hidden = true;
+      document.getElementById('page-message').textContent = '';
+      updateDraft();
+      dialog.showModal();
+    }
+
+    function closeModal() {
+      if (!saving) dialog.close();
+    }
+
+    function setSaving(value) {
+      saving = value;
+      toggle.disabled = value;
+      closeButton.disabled = value;
+      cancelButton.disabled = value;
+      saveButton.textContent = value ? 'Guardando…' : 'Guardar cambios';
+      updateDraft();
+    }
+
+    document.querySelectorAll('[data-task]').forEach(button => {
+      button.addEventListener('click', () => openTask(button.dataset.task));
+    });
+    toggle.addEventListener('change', () => { saveError.hidden = true; updateDraft(); });
+    closeButton.addEventListener('click', closeModal);
+    cancelButton.addEventListener('click', closeModal);
+    dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
+    document.getElementById('task-form').addEventListener('submit', event => {
+      event.preventDefault();
+      if (saving || toggle.checked === currentTask.completed) return;
+      const simulateError = document.getElementById('simulate-error').checked;
+      saveError.hidden = true;
+      setSaving(true);
+      window.setTimeout(() => {
+        setSaving(false);
+        if (simulateError) { saveError.hidden = false; return; }
+        currentTask.completed = toggle.checked;
+        const badge = document.querySelector(`[data-badge="${currentTask.id}"]`);
+        badge.textContent = currentTask.completed ? 'Completada' : 'Pendiente';
+        badge.classList.toggle('completed', currentTask.completed);
+        dialog.close();
+        document.getElementById('page-message').textContent = `${currentTask.title}: ${currentTask.completed ? 'completada' : 'pendiente'}. Cambio aplicado solo en este borrador.`;
+      }, 650);
+    });
+  </script>
+</body>
+</html>
