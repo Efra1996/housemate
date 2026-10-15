@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Devoluciones desde Saldos</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269;
+      --line: #e5e9df; --due: #92601e; --contrast: #ffffff; --danger: #a13f35;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; --contrast: #18201c; --danger: #f1aba0; }
+    }
+    :root[data-theme="light"] { color-scheme: light; --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3; --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df; --due: #92601e; --contrast: #ffffff; --danger: #a13f35; }
+    :root[data-theme="dark"] { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; --contrast: #18201c; --danger: #f1aba0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .45; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    .review { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px max(20px, calc((100vw - 960px) / 2)); border-bottom: 1px solid var(--line); }
+    .review p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .review-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .theme { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    select { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; color: var(--ink); background: var(--surface); }
+    .reset { min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--green); font-size: 12px; }
+    main { max-width: 1024px; margin: auto; padding: 34px 32px 40px; }
+    .heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .heading { margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
+    .section-heading { margin: 28px 0 15px; }
+    .section-heading span { color: var(--muted); font-size: 12px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 12px 16px; border: 0; border-radius: 13px; font-size: 13px; font-weight: 600; }
+    .secondary { color: var(--green); background: var(--sage); }
+    .primary { background: var(--green); color: var(--contrast); }
+    .expense-list { display: grid; gap: 11px; }
+    .expense { display: flex; justify-content: space-between; gap: 16px; padding: 18px 20px; border-radius: 17px; background: var(--surface); }
+    .expense h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+    .expense p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.7; }
+    .money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .money strong { display: block; font-weight: 650; font-size: 18px; }
+    .money small { display: block; margin-top: 5px; font-size: 11px; }
+    .expense .money strong { font-size: 15px; }
+    .expense .money small { color: var(--muted); }
+    .balances { list-style: none; display: grid; gap: 11px; padding: 0; margin: 0; }
+    .member { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 20px; min-height: 82px; background: var(--surface); border-radius: 17px; }
+    .avatar { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; color: #374438; font-size: 12px; font-weight: 700; }
+    .avatar--1 { background: #edc5a9; } .avatar--2 { background: #d4dfba; } .avatar--3 { background: #dbd0e8; } .avatar--4 { background: #cbdde2; } .avatar--5 { background: #e6d9b9; }
+    .name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+    .member-action { min-width: 164px; margin-left: 8px; }
+    .receives { color: var(--green); } .owes { color: var(--due); } .settled { color: var(--muted); }
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .demo-note { max-width: 75ch; margin-top: 28px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .notice { color: var(--green); font-size: 13px; line-height: 1.7; }
+    dialog { width: min(480px, calc(100vw - 40px)); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); padding: 0; border: 0; border-radius: 24px; background: var(--background); color: var(--ink); overflow: auto; }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 14px 24px; border-bottom: 1px solid var(--line); }
+    .modal-heading h2 { font-size: 19px; }
+    .close { width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); font-size: 27px; }
+    .modal-content { padding: 20px 24px 24px; }
+    .intro { margin: 0 0 20px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .sender { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .sender .name small { display: block; margin-top: 5px; font-size: 11px; color: var(--muted); font-weight: 400; }
+    fieldset { min-width: 0; border: 0; padding: 0; margin: 0 0 22px; }
+    legend { padding: 0; font-size: 13px; font-weight: 600; }
+    .recipients { display: grid; gap: 10px; margin-top: 12px; }
+    .recipient { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid transparent; border-radius: 18px; background: var(--surface); cursor: pointer; }
+    .recipient:has(input:checked) { border-color: var(--green); }
+    .recipient .avatar { width: 34px; height: 34px; }
+    .recipient .money strong { font-size: 15px; }
+    input[type="radio"] { width: 21px; height: 21px; flex-shrink: 0; margin: 0 0 0 4px; accent-color: var(--green); }
+    .amount-label { display: grid; gap: 9px; font-size: 13px; font-weight: 600; }
+    .amount-control { display: flex; align-items: center; padding-right: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 400; }
+    .amount-control:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
+    .amount-control input { width: 100%; min-width: 0; min-height: 52px; padding: 14px; border: 0; border-radius: 12px; font-size: 17px; color: var(--ink); background: transparent; font-variant-numeric: tabular-nums; }
+    .amount-control input:focus-visible { outline: none; }
+    .preview { margin: 20px 0 0; padding-top: 16px; border-top: 1px solid var(--line); }
+    .preview h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+    .preview dl { margin: 0; }
+    .preview dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 13px; }
+    .preview dt { color: var(--muted); }
+    .preview dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .error { color: var(--danger); font-size: 12px; line-height: 1.7; }
+    .footer { display: grid; grid-template-columns: 1fr 1.8fr; gap: 10px; padding: 16px 24px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+    @media (max-width: 600px) {
+      main { max-width: 460px; padding: 28px 20px 36px; }
+      h1 { font-size: 28px; } h2 { font-size: 18px; }
+      .member { gap: 12px; padding: 18px; }
+      .member-action { margin: 0 0 0 52px; width: calc(100% - 52px); }
+      dialog { width: 100%; max-width: none; max-height: 94vh; max-height: 94dvh; margin: auto 0 0; border-radius: 24px 24px 0 0; }
+      .modal-content { padding: 18px 20px 24px; }
+      .modal-heading { padding-left: 20px; }
+      .footer { padding-left: 20px; padding-right: 20px; }
+      .recipient { padding: 14px; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="review" aria-label="Controles del borrador">
+    <p>Nuevo flujo · Una devolución a una persona · Datos de ejemplo</p>
+    <div class="review-controls"><button class="reset" id="reset">Restablecer ejemplo</button><label class="theme">Tema<select id="theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro</option></select></label></div>
+  </aside>
+  <main>
+    <header class="heading"><div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div><button class="button secondary" disabled>＋ Añadir gasto</button></header>
+    <section aria-labelledby="expenses-title">
+      <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><span>3 gastos</span></div>
+      <div class="expense-list">
+        <article class="expense"><div><h3>Productos de limpieza</h3><p>Pagó Marcela · Compartido entre cinco</p></div><div class="money"><strong>20,00 €</strong><small>4,00 € / persona</small></div></article>
+        <article class="expense"><div><h3>Factura de internet</h3><p>Pagó David · Compartido entre cinco</p></div><div class="money"><strong>30,00 €</strong><small>6,00 € / persona</small></div></article>
+        <article class="expense"><div><h3>Compra del supermercado</h3><p>Pagó Efra · Compartido entre cinco</p></div><div class="money"><strong>50,00 €</strong><small>10,00 € / persona</small></div></article>
+      </div>
+    </section>
+    <section aria-labelledby="balances-title">
+      <div class="section-heading"><h2 id="balances-title" tabindex="-1">Saldos</h2><span>5 compañeros</span></div>
+      <ul class="balances" id="balances" aria-label="Saldo de cada compañero"></ul>
+      <p class="hint">Registra una devolución desde la persona que ha enviado el dinero. Solo aparecen como destinatarios quienes tienen saldo a su favor.</p>
+      <p class="notice" id="notice" role="status"></p>
+    </section>
+    <p class="demo-note">Borrador interactivo, sin conexión a Firebase. Las devoluciones solo se simulan en esta página y se pierden al recargar. No se envía dinero ni se modifica ningún dato real.</p>
+  </main>
+  <dialog id="modal" aria-labelledby="modal-title" aria-describedby="modal-intro">
+    <form id="form">
+      <header class="modal-heading"><h2 id="modal-title">Registrar devolución</h2><button class="close" type="button" id="close" aria-label="Cerrar">×</button></header>
+      <div class="modal-content">
+        <p class="intro" id="modal-intro">Registra una devolución que ya se haya realizado. Este formulario no envía dinero.</p>
+        <div class="sender" id="sender"></div>
+        <fieldset><legend>¿Quién ha recibido el dinero?</legend><div class="recipients" id="recipients"></div></fieldset>
+        <label class="amount-label">Importe devuelto<div class="amount-control"><input id="amount" type="text" inputmode="decimal" placeholder="0,00" required disabled aria-describedby="amount-hint amount-error"><span aria-hidden="true">€</span></div></label>
+        <p class="hint" id="amount-hint">Selecciona a un destinatario para introducir el importe.</p>
+        <p class="error" id="amount-error" role="alert" hidden></p>
+        <section class="preview" id="preview" aria-live="polite" aria-atomic="true" hidden><h3>Así quedarán los saldos</h3><dl id="preview-values"></dl></section>
+      </div>
+      <footer class="footer"><button class="button secondary" type="button" id="cancel">Cancelar</button><button class="button primary" type="submit" id="save" disabled>Registrar devolución</button></footer>
+    </form>
+  </dialog>
+  <script>
+    // Isolated mock data and in-memory interactions only. No app or database access.
+    const initialMates = [
+      { id: 'mate-1', name: 'Efra', avatar: 'E', cents: 3000 },
+      { id: 'mate-2', name: 'David', avatar: 'D', cents: 1000 },
+      { id: 'mate-3', name: 'Ainara', avatar: 'A', cents: -2000 },
+      { id: 'mate-4', name: 'Izaro', avatar: 'I', cents: -2000 },
+      { id: 'mate-5', name: 'Marcela', avatar: 'M', cents: 0 },
+    ];
+    let mates = initialMates.map((mate) => ({ ...mate }));
+    let senderId = '';
+    const byId = (id) => document.getElementById(id);
+    const currency = (cents) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+    const signed = (cents) => (cents > 0 ? '+' : cents < 0 ? '−' : '') + currency(Math.abs(cents));
+    const modal = byId('modal');
+    function avatarFor(mate) {
+      const avatar = document.createElement('span'); avatar.className = 'avatar avatar--' + (initialMates.findIndex((entry) => entry.id === mate.id) + 1); avatar.textContent = mate.avatar; avatar.setAttribute('aria-hidden', 'true'); return avatar;
+    }
+    function moneyFor(cents) {
+      const money = document.createElement('div'); money.className = 'money ' + (cents > 0 ? 'receives' : cents < 0 ? 'owes' : 'settled');
+      const amount = document.createElement('strong'); amount.textContent = signed(cents);
+      const status = document.createElement('small'); status.textContent = cents > 0 ? 'A su favor' : cents < 0 ? 'Debe' : 'Al día'; money.append(amount, status); return money;
+    }
+    function renderBalances() {
+      byId('balances').replaceChildren();
+      for (const mate of mates) {
+        const row = document.createElement('li'); row.className = 'member';
+        const name = document.createElement('span'); name.className = 'name'; name.textContent = mate.name;
+        row.append(avatarFor(mate), name, moneyFor(mate.cents));
+        if (mate.cents < 0) {
+          const action = document.createElement('button'); action.type = 'button'; action.className = 'button secondary member-action'; action.textContent = 'Registrar devolución'; action.setAttribute('aria-label', 'Registrar devolución de ' + mate.name); action.onclick = () => openModal(mate.id); row.append(action);
+        }
+        byId('balances').append(row);
+      }
+    }
+    function openModal(id) {
+      senderId = id; byId('form').reset();
+      const sender = mates.find((mate) => mate.id === id);
+      byId('modal-title').textContent = 'Devolución de ' + sender.name;
+      const name = document.createElement('div'); name.className = 'name'; name.textContent = sender.name;
+      const caption = document.createElement('small'); caption.textContent = 'Persona que ha enviado el dinero'; name.append(caption);
+      byId('sender').replaceChildren(avatarFor(sender), name, moneyFor(sender.cents));
+      byId('recipients').replaceChildren();
+      for (const mate of mates.filter((entry) => entry.cents > 0)) {
+        const label = document.createElement('label'); label.className = 'recipient';
+        const recipientName = document.createElement('span'); recipientName.className = 'name'; recipientName.textContent = mate.name;
+        const input = document.createElement('input'); input.type = 'radio'; input.name = 'recipient'; input.value = mate.id; input.required = true; input.addEventListener('change', updatePreview);
+        label.append(avatarFor(mate), recipientName, moneyFor(mate.cents), input); byId('recipients').append(label);
+      }
+      if (!byId('recipients').children.length) { const hint = document.createElement('p'); hint.className = 'hint'; hint.textContent = 'No hay compañeros con saldo a su favor.'; byId('recipients').append(hint); }
+      updatePreview(); modal.showModal();
+    }
+    function readCents(value) {
+      const normalized = value.trim().replace(',', '.');
+      if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return null;
+      const [euros, fraction = ''] = normalized.split('.');
+      const cents = Number(euros) * 100 + Number(fraction.padEnd(2, '0'));
+      return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
+    }
+    function readDraft() {
+      const sender = mates.find((mate) => mate.id === senderId);
+      const recipientId = byId('recipients').querySelector('input:checked')?.value;
+      const recipient = mates.find((mate) => mate.id === recipientId);
+      const cents = readCents(byId('amount').value);
+      const limit = sender && recipient ? Math.min(Math.max(0, -sender.cents), Math.max(0, recipient.cents)) : 0;
+      return { sender, recipient, cents, limit, valid: !!sender && !!recipient && cents !== null && cents <= limit };
+    }
+    function updatePreview() {
+      const draft = readDraft(); const raw = byId('amount').value.trim();
+      byId('amount').disabled = !draft.recipient;
+      byId('amount-hint').textContent = draft.recipient ? 'Puedes registrar hasta ' + currency(draft.limit) + ': el menor importe entre la deuda y el saldo a favor.' : 'Selecciona a un destinatario para introducir el importe.';
+      let error = '';
+      if (draft.recipient && raw && draft.cents === null) error = 'Introduce un importe mayor que cero, con un máximo de dos decimales.';
+      else if (draft.recipient && draft.cents !== null && draft.cents > draft.limit) error = 'El importe no puede superar ' + currency(draft.limit) + '.';
+      byId('amount-error').textContent = error; byId('amount-error').hidden = !error; byId('amount').setAttribute('aria-invalid', String(!!error));
+      byId('save').disabled = !draft.valid; byId('preview').hidden = !draft.valid; byId('preview-values').replaceChildren();
+      if (draft.valid) {
+        for (const [mate, cents] of [[draft.sender, draft.sender.cents + draft.cents], [draft.recipient, draft.recipient.cents - draft.cents]]) {
+          const row = document.createElement('div'); const name = document.createElement('dt'); name.textContent = mate.name;
+          const value = document.createElement('dd'); value.textContent = signed(cents) + ' · ' + (cents > 0 ? 'A su favor' : cents < 0 ? 'Debe' : 'Al día'); row.append(name, value); byId('preview-values').append(row);
+        }
+      }
+    }
+    byId('amount').addEventListener('input', updatePreview);
+    byId('close').onclick = byId('cancel').onclick = () => modal.close();
+    byId('form').addEventListener('submit', (event) => {
+      event.preventDefault(); const draft = readDraft(); if (!draft.valid) return;
+      draft.sender.cents += draft.cents; draft.recipient.cents -= draft.cents;
+      modal.close(); renderBalances();
+      byId('notice').textContent = 'Simulación: devolución de ' + currency(draft.cents) + ' de ' + draft.sender.name + ' a ' + draft.recipient.name + '. No se ha guardado ningún dato real.';
+      byId('balances-title').focus();
+    });
+    byId('reset').addEventListener('click', () => { mates = initialMates.map((mate) => ({ ...mate })); renderBalances(); byId('notice').textContent = 'Ejemplo restablecido.'; });
+    byId('theme').addEventListener('change', (event) => { if (event.target.value === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = event.target.value; });
+    renderBalances();
+  </script>
+</body>
+</html>

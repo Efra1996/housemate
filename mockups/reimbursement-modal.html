@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Registrar reembolsos</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269;
+      --line: #e5e9df; --due: #92601e; --contrast: #ffffff;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; --contrast: #18201c; }
+    }
+    :root[data-theme="light"] { color-scheme: light; --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3; --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df; --due: #92601e; --contrast: #ffffff; }
+    :root[data-theme="dark"] { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; --contrast: #18201c; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .45; cursor: default; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    .review { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px max(20px, calc((100vw - 960px) / 2)); border-bottom: 1px solid var(--line); }
+    .review p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .theme { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    select { min-height: 46px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
+    main { max-width: 1024px; margin: auto; padding: 34px 32px 40px; }
+    .heading, .section-heading, .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .heading { margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
+    .section-heading { margin: 24px 0 15px; }
+    .section-heading span { font-size: 12px; color: var(--muted); }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 16px; border: 0; border-radius: 13px; font-size: 13px; font-weight: 600; }
+    .secondary { color: var(--green); background: var(--sage); }
+    .primary { background: var(--green); color: var(--contrast); }
+    .expense { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 20px; border-radius: 17px; background: var(--surface); }
+    .expense h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+    .expense p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.7; }
+    .money { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+    .money strong { font-weight: 650; }
+    .money small { display: block; margin-top: 5px; font-size: 11px; }
+    .expense .money { font-size: 15px; }
+    .expense .money small { color: var(--muted); }
+    .balance-list { list-style: none; padding: 0 18px; margin: 0; background: var(--surface); border-radius: 17px; }
+    .balance-row { display: flex; align-items: center; gap: 12px; min-height: 82px; padding: 16px 0; }
+    .balance-row + .balance-row { border-top: 1px solid var(--line); }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; color: #374438; font-size: 12px; font-weight: 700; }
+    .avatar--1 { background: #edc5a9; } .avatar--2 { background: #d4dfba; } .avatar--3 { background: #dbd0e8; } .avatar--4 { background: #cbdde2; } .avatar--5 { background: #e6d9b9; }
+    .member-name { flex: 1; font-size: 14px; font-weight: 600; }
+    .balance-row .money strong { font-size: 18px; }
+    .receives { color: var(--green); } .owes { color: var(--due); } .settled { color: var(--muted); }
+    .register { width: 100%; margin-top: 12px; }
+    .hint, .demo-note { color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .demo-note { font-size: 11px; margin-top: 28px; max-width: 75ch; }
+    .notice { color: var(--green); font-size: 13px; line-height: 1.7; }
+    dialog { width: min(480px, calc(100vw - 40px)); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); padding: 0; border: 0; border-radius: 24px; color: var(--ink); background: var(--background); overflow: auto; }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    .modal-heading { padding: 14px 20px 14px 24px; border-bottom: 1px solid var(--line); }
+    .modal-heading h2 { font-size: 19px; }
+    .close { width: 44px; height: 44px; flex-shrink: 0; border: 0; background: transparent; color: var(--muted); font-size: 27px; }
+    .form-content { padding: 20px 24px 24px; }
+    .intro { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .sender-label { display: grid; gap: 9px; font-size: 13px; font-weight: 600; }
+    .sender-hint { margin: 8px 0 22px; }
+    fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+    legend { padding: 0; font-size: 13px; font-weight: 600; }
+    .recipient-hint { margin: 8px 0 12px; }
+    .recipient-list { padding: 0 14px; border-radius: 16px; background: var(--surface); }
+    .recipient + .recipient { border-top: 1px solid var(--line); }
+    .recipient-choice { display: flex; align-items: center; gap: 12px; min-height: 58px; cursor: pointer; }
+    .recipient-choice .avatar { width: 30px; height: 30px; font-size: 11px; }
+    .recipient-choice .member-name { font-weight: 500; }
+    input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--green); }
+    .recipient-amount { display: grid; gap: 8px; padding: 0 0 16px 42px; font-size: 12px; }
+    .amount-control { display: flex; align-items: center; gap: 8px; padding-right: 14px; background: var(--background); border: 1px solid var(--line); border-radius: 12px; }
+    .amount-control:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
+    .amount-control input { width: 100%; min-width: 0; min-height: 46px; padding: 12px 14px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
+    .amount-control input:focus-visible { outline: none; }
+    .total { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px; margin-top: 20px; border-radius: 16px; background: var(--sage); }
+    .total p { margin: 0; font-size: 13px; }
+    .total small { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .total strong { font-size: 23px; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .footer { display: grid; grid-template-columns: 1fr 1.8fr; gap: 10px; padding: 16px 24px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+    @media (max-width: 600px) {
+      main { max-width: 460px; padding: 28px 20px 36px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 18px; }
+      dialog { width: 100%; max-width: none; margin: auto 0 0; max-height: 94vh; max-height: 94dvh; border-radius: 24px 24px 0 0; }
+      .form-content { padding: 18px 20px 22px; }
+      .modal-heading { padding-left: 20px; }
+      .footer { padding-left: 20px; padding-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="review" aria-label="Opciones del borrador"><p>Opción 3 · Reembolsos a varios compañeros · Datos de ejemplo</p><label class="theme">Tema<select id="theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro</option></select></label></aside>
+  <main>
+    <header class="heading"><div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div><button class="button secondary" disabled>＋ Añadir gasto</button></header>
+    <section aria-labelledby="expenses-title"><div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><span>1 gasto</span></div><article class="expense"><div><h3>Compra del supermercado</h3><p>Pagó Efra</p><p>Compartido entre los cinco compañeros</p></div><div class="money"><strong>50,00 €</strong><small>10,00 € / persona</small></div></article></section>
+    <section aria-labelledby="balances-title">
+      <div class="section-heading"><h2 id="balances-title">Saldos</h2><span>5 compañeros</span></div>
+      <ul class="balance-list" id="balances" aria-label="Saldos de ejemplo"></ul>
+      <button class="button primary register" id="open">⇄ Registrar reembolso</button>
+      <p class="hint">Los saldos incluyen los gastos y los reembolsos registrados.</p>
+    </section>
+    <p class="notice" id="notice" role="status"></p>
+    <p class="demo-note">Borrador sin conexión a Firebase. Los saldos ilustran una compra de 50 € pagada por Efra entre cinco y un reembolso de 10 € de David a Efra. El formulario no guarda datos ni modifica los saldos.</p>
+  </main>
+  <dialog id="modal" aria-labelledby="modal-title" aria-describedby="modal-intro">
+    <form id="form">
+      <header class="modal-heading"><h2 id="modal-title">Registrar reembolso</h2><button class="close" id="close" type="button" aria-label="Cerrar">×</button></header>
+      <div class="form-content">
+        <p class="intro" id="modal-intro">Registra dinero que ya hayas enviado a tus compañeros. Este formulario no realiza pagos.</p>
+        <label class="sender-label">¿Quién eres?<select id="sender" required><option value="">Selecciona tu nombre</option></select></label>
+        <p class="hint sender-hint">La persona que ha enviado el dinero.</p>
+        <fieldset><legend>¿A quién has reembolsado?</legend><p class="hint recipient-hint" id="recipient-hint">Selecciona primero tu nombre.</p><div class="recipient-list" id="recipients"></div></fieldset>
+        <div class="total" aria-live="polite" aria-atomic="true"><div><p>Total reembolsado</p><small id="recipient-count">Ningún destinatario seleccionado</small></div><strong id="total">0,00 €</strong></div>
+        <p class="hint">Indica cuánto has enviado a cada persona. El total no se divide automáticamente.</p>
+      </div>
+      <footer class="footer"><button class="button secondary" type="button" id="cancel">Cancelar</button><button class="button primary" type="submit" id="save" disabled>Registrar reembolso</button></footer>
+    </form>
+  </dialog>
+  <script>
+    // Review-only form state. No database, browser storage, or network access.
+    const mates = [
+      { id: 'mate-1', name: 'Efra', avatar: 'E', cents: 3000 },
+      { id: 'mate-2', name: 'David', avatar: 'D', cents: 0 },
+      { id: 'mate-3', name: 'Ainara', avatar: 'A', cents: -1000 },
+      { id: 'mate-4', name: 'Izaro', avatar: 'I', cents: -1000 },
+      { id: 'mate-5', name: 'Marcela', avatar: 'M', cents: -1000 },
+    ];
+    const byId = (id) => document.getElementById(id);
+    const currency = (cents) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+    const modal = byId('modal');
+    function readCents(value) {
+      const normalized = value.trim().replace(',', '.');
+      if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return null;
+      const [euros, fraction = ''] = normalized.split('.');
+      const cents = Number(euros) * 100 + Number(fraction.padEnd(2, '0'));
+      return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
+    }
+    mates.forEach((mate, index) => {
+      const option = document.createElement('option'); option.value = mate.id; option.textContent = mate.name; byId('sender').append(option);
+      const row = document.createElement('li'); row.className = 'balance-row';
+      const avatar = document.createElement('span'); avatar.className = 'avatar avatar--' + (index + 1); avatar.textContent = mate.avatar; avatar.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.className = 'member-name'; name.textContent = mate.name;
+      const money = document.createElement('div'); money.className = 'money ' + (mate.cents > 0 ? 'receives' : mate.cents < 0 ? 'owes' : 'settled');
+      const amount = document.createElement('strong'); amount.textContent = (mate.cents > 0 ? '+' : mate.cents < 0 ? '−' : '') + currency(Math.abs(mate.cents));
+      const status = document.createElement('small'); status.textContent = mate.cents > 0 ? 'Por recibir' : mate.cents < 0 ? 'Por aportar' : 'Al día';
+      money.append(amount, status); row.append(avatar, name, money); byId('balances').append(row);
+    });
+    function renderRecipients() {
+      const sender = byId('sender').value; byId('recipients').replaceChildren();
+      byId('recipient-hint').textContent = sender ? 'Puedes elegir a varios compañeros e indicar un importe para cada uno.' : 'Selecciona primero tu nombre.';
+      if (!sender) { updateTotal(); return; }
+      mates.forEach((mate, index) => {
+        if (mate.id === sender) return;
+        const row = document.createElement('div'); row.className = 'recipient';
+        const label = document.createElement('label'); label.className = 'recipient-choice';
+        const avatar = document.createElement('span'); avatar.className = 'avatar avatar--' + (index + 1); avatar.textContent = mate.avatar; avatar.setAttribute('aria-hidden', 'true');
+        const name = document.createElement('span'); name.className = 'member-name'; name.textContent = mate.name;
+        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = mate.id;
+        const amountLabel = document.createElement('label'); amountLabel.className = 'recipient-amount'; amountLabel.hidden = true;
+        const amountText = document.createElement('span'); amountText.textContent = 'Importe para ' + mate.name;
+        const control = document.createElement('span'); control.className = 'amount-control';
+        const input = document.createElement('input'); input.type = 'text'; input.inputMode = 'decimal'; input.placeholder = '0,00'; input.disabled = true;
+        const symbol = document.createElement('span'); symbol.textContent = '€'; symbol.setAttribute('aria-hidden', 'true');
+        control.append(input, symbol); amountLabel.append(amountText, control); label.append(avatar, name, checkbox); row.append(label, amountLabel);
+        checkbox.addEventListener('change', () => {
+          amountLabel.hidden = !checkbox.checked; input.disabled = !checkbox.checked; input.required = checkbox.checked;
+          if (!checkbox.checked) input.value = '';
+          updateTotal();
+        });
+        input.addEventListener('input', updateTotal);
+        byId('recipients').append(row);
+      });
+      updateTotal();
+    }
+    function updateTotal() {
+      const selected = [...byId('recipients').querySelectorAll('input[type="checkbox"]:checked')];
+      const amounts = selected.map((checkbox) => readCents(checkbox.closest('.recipient').querySelector('input[type="text"]').value));
+      const total = amounts.reduce((sum, cents) => sum + (cents ?? 0), 0);
+      const valid = !!byId('sender').value && selected.length > 0 && amounts.every((cents) => cents !== null) && Number.isSafeInteger(total);
+      byId('total').textContent = Number.isSafeInteger(total) ? currency(total) : 'Revisa los importes';
+      byId('recipient-count').textContent = !selected.length ? 'Ningún destinatario seleccionado' : selected.length + (selected.length === 1 ? ' destinatario' : ' destinatarios') + (valid ? '' : ' · Completa los importes');
+      byId('save').disabled = !valid;
+      byId('save').textContent = selected.length > 1 ? 'Registrar reembolsos' : 'Registrar reembolso';
+    }
+    byId('sender').addEventListener('change', renderRecipients);
+    byId('open').addEventListener('click', () => { byId('form').reset(); renderRecipients(); modal.showModal(); });
+    byId('close').onclick = byId('cancel').onclick = () => modal.close();
+    byId('form').addEventListener('submit', (event) => {
+      event.preventDefault(); updateTotal(); if (byId('save').disabled) return;
+      const total = byId('total').textContent; modal.close();
+      byId('notice').textContent = 'Simulación completada: ' + total + '. No se ha guardado ningún reembolso ni se han modificado los saldos.';
+    });
+    byId('theme').addEventListener('change', (event) => {
+      if (event.target.value === 'system') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.dataset.theme = event.target.value;
+    });
+    renderRecipients();
+  </script>
+</body>
+</html>

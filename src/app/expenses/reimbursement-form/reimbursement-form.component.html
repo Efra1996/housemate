@@ -1,0 +1,69 @@
+<ion-modal [isOpen]="isOpen()" [canDismiss]="!saving()" (didDismiss)="dismissed.emit()" aria-labelledby="reimbursement-form-title">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title id="reimbursement-form-title">{{ sender() ? 'Devolución de ' + sender()?.mate.nombre : 'Registrar devolución' }}</ion-title>
+        <ion-buttons slot="end"><ion-button aria-label="Cerrar" [disabled]="saving()" (click)="close()"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="form-content">
+        <p class="intro">Registra una devolución ya realizada. Housemate no envía dinero.</p>
+        @if (sender(); as selectedSender) {
+          <div class="sender">
+            <ion-avatar [class]="'avatar avatar--' + (mates().indexOf(selectedSender.mate) % 5 + 1)" aria-hidden="true"><span>{{ selectedSender.mate.avatar }}</span></ion-avatar>
+            <div class="person-name"><strong>{{ selectedSender.mate.nombre }}</strong><small>Persona que ha enviado el dinero</small></div>
+            <div class="money owes"><strong>{{ formatBalance(-senderDebtCents()) }}</strong><small>{{ balanceStatus(-senderDebtCents()) }}</small></div>
+          </div>
+          @if (senderDebtCents() === 0) { <p class="hint">Esta persona ya no tiene deuda pendiente.</p> }
+          <section aria-labelledby="recipients-title">
+            <h2 id="recipients-title">¿Quién ha recibido el dinero?</h2>
+            @if (availableRecipients().length) {
+              <ion-radio-group [value]="recipientId()" (ionChange)="selectRecipient($event.detail.value)" aria-labelledby="recipients-title">
+                <ion-list class="recipients" lines="none">
+                  @for (balance of availableRecipients(); track balance.mate.id) {
+                    <ion-radio class="recipient" justify="space-between" [value]="balance.mate.id" [disabled]="saving() || senderDebtCents() === 0">
+                      <span class="recipient-label">
+                        <ion-avatar [class]="'avatar avatar--' + (mates().indexOf(balance.mate) % 5 + 1)" aria-hidden="true"><span>{{ balance.mate.avatar }}</span></ion-avatar>
+                        <span class="person-name">{{ balance.mate.nombre }}</span>
+                        <span class="money receives"><strong>{{ formatBalance(balance.amountCents) }}</strong><small>A su favor</small></span>
+                      </span>
+                    </ion-radio>
+                  }
+                </ion-list>
+              </ion-radio-group>
+            } @else { <p class="hint">No hay compañeros con saldo a su favor.</p> }
+          </section>
+          <ion-input #amountInput label="Importe devuelto en euros" labelPlacement="floating" fill="outline" mode="md" type="text" inputmode="decimal" placeholder="0,00"
+            aria-required="true" aria-describedby="reimbursement-amount-hint" [disabled]="saving() || !recipient() || senderDebtCents() === 0"
+            [value]="amount()" (ionInput)="setAmount($event.detail.value ?? '', amountInput)"><span slot="end" aria-hidden="true">€</span></ion-input>
+          <p class="hint" id="reimbursement-amount-hint">{{ recipient() ? 'Puedes registrar hasta ' + formatAmount(maximumCents()) + '. Puedes reducir el importe si la devolución fue parcial.' : 'Selecciona quién ha recibido el dinero para introducir el importe.' }}</p>
+          @if (amount().trim() && amountCents() === null) {
+            <p class="error-message" role="alert">Introduce un importe mayor que cero, con un máximo de dos decimales.</p>
+          } @else if (recipient() && (amountCents() ?? 0) > maximumCents()) {
+            <p class="error-message" role="alert">El importe no puede superar {{ formatAmount(maximumCents()) }}.</p>
+          }
+          @if (validAmount()) {
+            @if (recipient(); as selectedRecipient) {
+              <section class="preview" aria-labelledby="reimbursement-preview-title" aria-live="polite" aria-atomic="true">
+                <h2 id="reimbursement-preview-title">Así quedarán los saldos</h2>
+                <dl>
+                  <div><dt>{{ selectedSender.mate.nombre }}</dt><dd>{{ formatBalance(-senderDebtCents() + (amountCents() ?? 0)) }} · {{ balanceStatus(-senderDebtCents() + (amountCents() ?? 0)) }}</dd></div>
+                  <div><dt>{{ selectedRecipient.mate.nombre }}</dt><dd>{{ formatBalance(selectedRecipient.amountCents - (amountCents() ?? 0)) }} · {{ balanceStatus(selectedRecipient.amountCents - (amountCents() ?? 0)) }}</dd></div>
+                </dl>
+              </section>
+            }
+          }
+        } @else { <p class="hint">Cierra esta ventana y vuelve a cargar los saldos para seleccionar a un compañero.</p> }
+        @if (error()) { <p class="error-message" role="alert">{{ error() }}</p> }
+      </div>
+    </ion-content>
+    <ion-footer class="ion-no-border"><div class="form-footer">
+      <ion-button fill="outline" [disabled]="saving()" (click)="close()">Cancelar</ion-button>
+      <ion-button [disabled]="!canSave()" (click)="save()">
+        @if (saving()) { <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner> }
+        {{ saving() ? 'Registrando…' : 'Registrar devolución' }}
+      </ion-button>
+    </div></ion-footer>
+  </ng-template>
+</ion-modal>

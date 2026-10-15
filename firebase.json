@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "housemate-16-1d",
+    "public": "www",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}

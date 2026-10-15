@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Opciones para registrar reembolsos</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269;
+      --line: #e5e9df; --due: #92601e; --contrast: #ffffff;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; --contrast: #18201c; }
+    }
+    :root[data-theme="light"] { color-scheme: light; --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3; --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df; --due: #92601e; --contrast: #ffffff; }
+    :root[data-theme="dark"] { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; --contrast: #18201c; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    .symbols { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .icon { width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .review { padding: 22px max(20px, calc((100vw - 960px) / 2)); background: var(--surface); border-bottom: 1px solid var(--line); }
+    .review-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .review h1 { margin: 0; font-size: 18px; font-weight: 650; }
+    .theme { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    select { min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--background); }
+    .options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .option { min-height: 44px; padding: 10px 13px; border: 1px solid var(--line); border-radius: 12px; font-size: 12px; color: var(--ink); background: var(--background); }
+    .option[aria-pressed="true"] { border-color: var(--green); background: var(--sage); color: var(--green); }
+    .review-note { margin: 14px 0 0; max-width: 75ch; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    main { max-width: 1024px; padding: 34px 32px 40px; margin: auto; }
+    .page-heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .page-heading { margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+    .page-heading h2 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 11px 15px; border: 1px solid transparent; border-radius: 13px; font-size: 13px; font-weight: 600; }
+    .sage { background: var(--sage); color: var(--green); }
+    .outline { border-color: var(--green); color: var(--green); background: transparent; }
+    .primary { color: var(--contrast); background: var(--green); }
+    .section-heading { margin: 24px 0 15px; min-height: 44px; }
+    h3 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
+    .count { font-size: 12px; color: var(--muted); }
+    .expense { display: flex; justify-content: space-between; gap: 16px; padding: 20px; border-radius: 17px; background: var(--surface); }
+    .expense h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+    .expense p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .money { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+    .expense .money { font-size: 15px; }
+    .expense .money small { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+    .balances-section { margin-top: 28px; }
+    .section-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
+    .balance-list { list-style: none; margin: 0; padding: 0 18px; border-radius: 17px; background: var(--surface); }
+    .member { display: flex; align-items: center; gap: 12px; min-height: 82px; padding: 16px 0; }
+    .member + .member { border-top: 1px solid var(--line); }
+    .avatar { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #374438; }
+    .peach { background: #edc5a9; } .sage-avatar { background: #d4dfba; } .lavender { background: #dbd0e8; } .blue { background: #cbdde2; } .sand { background: #e6d9b9; }
+    .name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+    .member .money strong { display: block; font-size: 18px; font-weight: 650; }
+    .member .money small { display: block; margin-top: 5px; font-size: 11px; }
+    .receives { color: var(--green); } .owes { color: var(--due); } .settled { color: var(--muted); }
+    .explanation, .demo-note { color: var(--muted); font-size: 12px; line-height: 1.7; max-width: 75ch; }
+    .explanation { margin: 12px 2px 0; }
+    .demo-note { margin: 30px 0 0; font-size: 11px; }
+    .footer-action { width: 100%; margin-top: 12px; }
+    .member-action { padding: 10px; background: transparent; color: var(--green); font-size: 12px; }
+    .member-action .icon { width: 18px; height: 18px; }
+    .overflow { position: relative; }
+    .overflow-toggle { width: 44px; padding: 10px; background: var(--sage); color: var(--green); }
+    .action-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 2; min-width: 220px; padding: 6px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: 0 8px 22px #0001; }
+    .action-menu button { width: 100%; background: transparent; color: var(--green); justify-content: flex-start; }
+    .header-action, .footer-action, .member-action, .overflow { display: none; }
+    [data-option="1"] .header-action, [data-option="2"] .header-action { display: inline-flex; }
+    [data-option="3"] .footer-action { display: flex; }
+    [data-option="4"] .member-action { display: inline-flex; }
+    [data-option="5"] .overflow { display: block; }
+    dialog { width: min(420px, calc(100vw - 40px)); border: 0; border-radius: 22px; padding: 24px; background: var(--surface); color: var(--ink); }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    dialog h2 { font-size: 20px; margin: 0 0 12px; }
+    dialog p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    dialog .button { width: 100%; margin-top: 8px; }
+    @media (max-width: 767px) {
+      main { max-width: 460px; padding: 28px 20px 36px; }
+      .page-heading h2 { font-size: 28px; }
+      h3 { font-size: 18px; }
+      .balances-section > .section-heading { flex-wrap: wrap; }
+      .header-action { font-size: 12px; padding: 10px 12px; }
+      [data-option="4"] .member { flex-wrap: wrap; column-gap: 10px; }
+      [data-option="4"] .member-action { margin-left: 44px; width: calc(100% - 44px); padding-left: 0; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body data-option="1">
+  <svg class="symbols" aria-hidden="true"><defs>
+    <symbol id="transfer" viewBox="0 0 24 24"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></symbol>
+    <symbol id="more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  </defs></svg>
+  <aside class="review" aria-label="Opciones de diseño">
+    <div class="review-heading"><h1>¿Dónde registrar un reembolso?</h1><label class="theme">Tema<select id="theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro</option></select></label></div>
+    <div class="options" role="group" aria-label="Elegir una propuesta">
+      <button class="option" data-choice="1" aria-pressed="true">1. Cabecera · Recomendada</button>
+      <button class="option" data-choice="2" aria-pressed="false">2. Contorno</button>
+      <button class="option" data-choice="3" aria-pressed="false">3. Al pie</button>
+      <button class="option" data-choice="4" aria-pressed="false">4. Por compañero</button>
+      <button class="option" data-choice="5" aria-pressed="false">5. Menú de acciones</button>
+    </div>
+    <p class="review-note" id="option-description" aria-live="polite">Una acción junto a «Saldos»: visible, discreta y separada de «Añadir gasto». No presupone quién paga a quién.</p>
+  </aside>
+  <main>
+    <header class="page-heading"><div><p class="eyebrow">Las cuentas, claras</p><h2>Gastos</h2></div><button class="button sage" disabled>＋ Añadir gasto</button></header>
+    <section aria-labelledby="expenses-title">
+      <div class="section-heading"><h3 id="expenses-title">Últimos gastos</h3><span class="count">1 gasto</span></div>
+      <article class="expense"><div><h4>Compra del supermercado</h4><p>Pagó Efra</p><p>Compartido entre los cinco compañeros</p></div><div class="money"><strong>50,00 €</strong><small>10,00 € / persona</small></div></article>
+    </section>
+    <section class="balances-section" aria-labelledby="balances-title">
+      <div class="section-heading">
+        <div class="section-title"><h3 id="balances-title">Saldos</h3><span class="count">5 compañeros</span></div>
+        <button id="header-action" class="button sage header-action" data-register><svg class="icon" aria-hidden="true"><use href="#transfer"/></svg>Registrar reembolso</button>
+        <div class="overflow">
+          <button class="button overflow-toggle" id="overflow-toggle" aria-label="Acciones de saldos" aria-expanded="false" aria-controls="action-menu"><svg class="icon" aria-hidden="true"><use href="#more"/></svg></button>
+          <div class="action-menu" id="action-menu" hidden><button class="button" data-register><svg class="icon" aria-hidden="true"><use href="#transfer"/></svg>Registrar reembolso</button></div>
+        </div>
+      </div>
+      <ul class="balance-list" id="balances" aria-label="Saldo de cada compañero"></ul>
+      <button class="button primary footer-action" data-register><svg class="icon" aria-hidden="true"><use href="#transfer"/></svg>Registrar reembolso</button>
+      <p class="explanation">Lo que ha pagado cada compañero menos su parte de los gastos, ajustado por los reembolsos enviados y recibidos.</p>
+    </section>
+    <p class="demo-note">Borrador con datos de ejemplo: Efra paga 50 € entre cinco y David le devuelve 10 €. Los botones solo muestran una explicación; no guardan datos ni realizan pagos.</p>
+  </main>
+  <dialog id="demo-dialog" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">Registrar reembolso</h2>
+    <p id="dialog-context"></p>
+    <p>Aquí se abriría el formulario para indicar quién envió el dinero, quién lo recibió y el importe. Registrar un reembolso no realiza ningún pago.</p>
+    <p>Este borrador no ha modificado ningún saldo.</p>
+    <form method="dialog"><button class="button sage">Volver al borrador</button></form>
+  </dialog>
+  <script>
+    // Standalone visual review only: no services, storage, or network requests.
+    const members = [
+      { name: 'Efra', avatar: 'E', color: 'peach', amount: '+30,00 €', status: 'Por recibir', type: 'receives' },
+      { name: 'David', avatar: 'D', color: 'sage-avatar', amount: '0,00 €', status: 'Al día', type: 'settled' },
+      { name: 'Ainara', avatar: 'A', color: 'lavender', amount: '−10,00 €', status: 'Por aportar', type: 'owes' },
+      { name: 'Izaro', avatar: 'I', color: 'blue', amount: '−10,00 €', status: 'Por aportar', type: 'owes' },
+      { name: 'Marcela', avatar: 'M', color: 'sand', amount: '−10,00 €', status: 'Por aportar', type: 'owes' },
+    ];
+    const descriptions = {
+      1: 'Una acción junto a «Saldos»: visible, discreta y separada de «Añadir gasto». No presupone quién paga a quién.',
+      2: 'La misma ubicación con contorno: más énfasis visual sin usar un botón de color sólido.',
+      3: 'Botón de ancho completo después de los saldos: cómodo en móvil, pero requiere llegar al final de la lista.',
+      4: 'Una acción por compañero: más contextual, pero repite controles y ocupa más espacio. No elige automáticamente al otro participante ni el importe.',
+      5: 'Un menú junto al título mantiene la cabecera despejada, a cambio de un toque adicional y menor visibilidad.',
+    };
+    const dialog = document.getElementById('demo-dialog');
+    const menu = document.getElementById('action-menu');
+    const toggle = document.getElementById('overflow-toggle');
+    function closeMenu() { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
+    function openDemo(name) {
+      closeMenu();
+      document.getElementById('dialog-context').textContent = name ? `Acción abierta desde la fila de ${name}.` : 'Acción general de la sección Saldos.';
+      dialog.showModal();
+    }
+    for (const member of members) {
+      const row = document.createElement('li'); row.className = 'member';
+      const avatar = document.createElement('span'); avatar.className = 'avatar ' + member.color; avatar.setAttribute('aria-hidden', 'true'); avatar.textContent = member.avatar;
+      const name = document.createElement('span'); name.className = 'name'; name.textContent = member.name;
+      const money = document.createElement('div'); money.className = 'money ' + member.type;
+      const amount = document.createElement('strong'); amount.textContent = member.amount;
+      const status = document.createElement('small'); status.textContent = member.status; money.append(amount, status);
+      const action = document.createElement('button'); action.className = 'button member-action'; action.textContent = 'Registrar reembolso'; action.setAttribute('aria-label', 'Registrar reembolso relacionado con ' + member.name); action.onclick = () => openDemo(member.name);
+      row.append(avatar, name, money, action); document.getElementById('balances').append(row);
+    }
+    document.querySelectorAll('[data-choice]').forEach((button) => button.addEventListener('click', () => {
+      const option = button.dataset.choice; document.body.dataset.option = option;
+      document.querySelectorAll('[data-choice]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+      document.getElementById('header-action').className = 'button header-action ' + (option === '2' ? 'outline' : 'sage');
+      document.getElementById('option-description').textContent = descriptions[option]; closeMenu();
+    }));
+    document.querySelectorAll('[data-register]').forEach((button) => button.addEventListener('click', () => openDemo()));
+    toggle.addEventListener('click', () => { menu.hidden = !menu.hidden; toggle.setAttribute('aria-expanded', String(!menu.hidden)); });
+    document.addEventListener('click', (event) => { if (!event.target.closest('.overflow')) closeMenu(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !menu.hidden) { closeMenu(); toggle.focus(); } });
+    document.getElementById('theme').addEventListener('change', (event) => {
+      if (event.target.value === 'system') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.dataset.theme = event.target.value;
+    });
+  </script>
+</body>
+</html>

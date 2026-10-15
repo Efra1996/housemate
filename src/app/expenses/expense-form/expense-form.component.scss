@@ -4,25 +4,32 @@ ion-toolbar { --background: var(--ion-background-color); --min-height: 68px; --p
 ion-title { font-size: 19px; font-weight: 650; }
 .form-content { padding: 12px 24px 24px; }
 ion-select, ion-textarea, ion-input {
-  display: block; margin-bottom: 18px; padding: 12px 14px; border: 1px solid var(--housemate-line);
-  border-radius: 12px; background: var(--housemate-surface); font-size: 14px;
+  display: block; margin-bottom: 18px; font-size: 14px;
+  --background: var(--housemate-surface); --border-color: var(--housemate-line); --border-radius: 12px;
+  --padding-start: 14px; --padding-end: 14px;
 }
 ion-select { width: 100%; }
-ion-input { --padding-start: 0; --padding-end: 0; }
-.participants-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; }
 h2 { margin: 0; font-size: 13px; font-weight: 600; }
-.participants-heading ion-button { margin: 0; min-height: 44px; font-size: 12px; text-transform: none; }
-.mates { padding: 0 14px; border-radius: 16px; background: var(--housemate-surface); }
-ion-item { --background: var(--housemate-surface); --padding-start: 0; --inner-padding-end: 0; --min-height: 52px; }
-ion-item + ion-item { border-top: 1px solid var(--housemate-line); }
-ion-avatar { display: grid; place-items: center; width: 30px; height: 30px; margin-right: 12px; background: var(--housemate-sage); color: var(--ion-color-primary); font-size: 10px; font-weight: 700; }
-ion-checkbox { width: 100%; font-size: 14px; }
-.hint, .error-message { font-size: 12px; line-height: 1.6; }
-.hint { color: var(--housemate-muted); }
-.error-message { color: var(--ion-color-danger); }
-.preview { padding: 16px; margin-top: 18px; border-radius: 16px; background: var(--housemate-sage); }
-.preview strong { font-size: 17px; font-variant-numeric: tabular-nums; }
-.preview p { margin: 6px 0 0; color: var(--housemate-progress-text); font-size: 12px; line-height: 1.6; }
+.mates { display: grid; gap: 12px; padding: 0; background: transparent; }
+ion-item { --background: var(--housemate-surface); --padding-start: 20px; --inner-padding-end: 20px; --min-height: 76px; border-radius: 20px; }
+.select-all { --background: var(--housemate-sage); font-weight: 600; }
+ion-checkbox { width: 100%; min-height: 76px; font-size: 16px; --size: 24px; --border-radius: 3px; }
+.mate-label { display: flex; align-items: center; gap: 16px; white-space: normal; }
+.avatar {
+  display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; color: #374438; font-size: 12px; font-weight: 700;
+  &--1 { background: #edc5a9; }
+  &--2 { background: #d4dfba; }
+  &--3 { background: #dbd0e8; }
+  &--4 { background: #cbdde2; }
+  &--5 { background: #e6d9b9; }
+}
+.hint { color: var(--housemate-muted); font-size: 12px; line-height: 1.6; }
+.split-preview { margin-top: 18px; padding: 16px; border-radius: 16px; background: var(--housemate-sage); }
+.split-preview dl { margin: 0; font-size: 13px; }
+.split-preview dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.split-preview dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.error-message { font-size: 12px; line-height: 1.6; color: var(--ion-color-danger); }
+ion-spinner { width: 18px; height: 18px; }
 .form-footer { display: grid; grid-template-columns: 1fr 1.7fr; gap: 10px; padding: 16px 22px calc(20px + var(--ion-safe-area-bottom, 0px)); background: var(--housemate-surface); border-top: 1px solid var(--housemate-line); }
 .form-footer ion-button { margin: 0; min-height: 46px; --border-radius: 13px; --box-shadow: none; font-size: 13px; text-transform: none; }
 @media (max-width: 600px) {

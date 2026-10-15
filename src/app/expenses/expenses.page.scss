@@ -9,7 +9,9 @@
 .page-heading { margin-bottom: 26px; }
 .eyebrow { margin: 0 0 6px; font-size: 12px; color: var(--housemate-muted); }
 h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
-.add-expense { margin: 0; min-height: 44px; font-size: 13px; text-transform: none; --background: var(--housemate-sage); --color: var(--ion-color-primary); --border-radius: 13px; --box-shadow: none; }
+.add-expense, .show-all { min-height: 44px; font-size: 13px; text-transform: none; --color: var(--ion-color-primary); --border-radius: 13px; --box-shadow: none; }
+.add-expense { margin: 0; --background: var(--housemate-sage); }
+.show-all { margin: 12px 0 0; --border-color: var(--housemate-line); }
 ion-card { margin: 0; box-shadow: none; color: var(--ion-text-color); --background: var(--housemate-surface); }
 .section-heading { margin: 24px 0 15px; }
 .section-heading h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
@@ -20,20 +22,47 @@ ion-item { --background: var(--housemate-surface); --padding-start: 14px; --inne
 ion-label { margin: 15px 0; }
 ion-label h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
 ion-label p { margin: 0; font-size: 12px; color: var(--housemate-muted); line-height: 1.5; overflow-wrap: anywhere; }
-.expense-icon { padding: 10px; margin: 0 12px 0 0; border-radius: 12px; font-size: 22px; background: var(--housemate-sand); color: var(--ion-color-primary); }
+.expense-icon { padding: 12px; margin: 0 12px 0 0; border-radius: 14px; font-size: 24px; background: var(--housemate-sand); color: var(--ion-color-primary); }
 .money { margin-left: 12px; font-size: 15px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; max-width: 45%; overflow-wrap: anywhere; }
 .money strong { font-weight: 650; }
 .detail { display: block; margin-top: 5px; font-size: 11px; color: var(--housemate-muted); }
-.local-note { margin: 30px 0 0; font-size: 11px; color: var(--housemate-muted); line-height: 1.6; }
-.notice { font-size: 13px; color: var(--ion-color-primary); }
 .empty-state { padding: 24px; border-radius: 17px; }
 .empty-state h3 { margin: 0 0 10px; font-size: 17px; font-weight: 600; }
 .empty-state p { margin: 0 0 14px; font-size: 13px; line-height: 1.6; color: var(--housemate-muted); }
 .empty-state ion-button { margin: 0; text-transform: none; --border-radius: 12px; }
+.balances-section { margin-top: 28px; }
+.reimbursement-button { margin: 0 0 0 8px; min-height: 46px; min-width: 164px; --background: var(--housemate-sage); --color: var(--ion-color-primary); --border-radius: 13px; --box-shadow: none; font-size: 13px; text-transform: none; }
+.balance-list { display: grid; gap: 11px; padding: 0; background: transparent; }
+.balance-card { padding: 18px 20px; }
+.balance-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 46px; }
+.balance-name { flex: 1; min-width: 0; }
+.balance-name h3 { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.balance-row .avatar { margin: 0; }
+.balance-list .money { font-size: 18px; }
+.balance--receives { color: var(--ion-color-primary); }
+.balance--owes { color: var(--housemate-due); }
+.balance--settled { color: var(--housemate-muted); }
+.balance-list .detail { color: inherit; }
+.balances-note { margin: 12px 2px 0; max-width: 65ch; font-size: 12px; line-height: 1.7; color: var(--housemate-muted); }
+.avatar {
+  display: grid; place-items: center; width: 34px; height: 34px; margin: 0 12px 0 0;
+  color: #374438; font-size: 12px; font-weight: 700;
+  &--1 { background: #edc5a9; }
+  &--2 { background: #d4dfba; }
+  &--3 { background: #dbd0e8; }
+  &--4 { background: #cbdde2; }
+  &--5 { background: #e6d9b9; }
+}
+.history-modal { --width: 600px; --height: 85vh; --border-radius: 24px; }
+.history-content { padding: 12px 20px 24px; }
+.history-content h3 { margin: 0; font-size: 14px; font-weight: 600; }
 @media (max-width: 767px) {
   .expenses-page { --page-gutter: 20px; --page-top: 28px; max-width: 460px; }
   h1 { font-size: 28px; }
   .section-heading h2 { font-size: 18px; }
   .money { font-size: 14px; max-width: 40%; }
-  .expense-icon { display: none; }
+  .expense-icon { padding: 10px; margin-right: 10px; font-size: 22px; }
+  .balance-card { padding: 18px; }
+  .reimbursement-button { margin: 0 0 0 50px; flex-basis: calc(100% - 50px); }
+  .history-modal { --width: 100%; --border-radius: 24px 24px 0 0; align-items: flex-end; }
 }

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Últimos gastos e historial</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269;
+      --line: #e5e9df; --due: #92601e;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; }
+    }
+    :root[data-theme="light"] { color-scheme: light; --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3; --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df; --due: #92601e; }
+    :root[data-theme="dark"] { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .45; cursor: default; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    .review { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px max(20px, calc((100vw - 960px) / 2)); border-bottom: 1px solid var(--line); }
+    .review p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.7; }
+    .theme { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    select { padding: 8px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--surface); }
+    main { max-width: 1024px; margin: auto; padding: 34px 32px 40px; }
+    .heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .heading { margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
+    .section-heading { margin: 26px 0 15px; }
+    .count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 16px; border: 0; border-radius: 13px; background: var(--sage); color: var(--green); font-size: 13px; font-weight: 600; }
+    .expense-list { list-style: none; display: grid; gap: 10px; margin: 0; padding: 0; }
+    .expense { display: flex; align-items: start; justify-content: space-between; gap: 20px; padding: 18px 20px; border-radius: 17px; background: var(--surface); }
+    .expense-copy { min-width: 0; }
+    .expense h3 { margin: 0 0 7px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+    .expense p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .expense .participants { margin-top: 2px; font-size: 11px; }
+    .money { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+    .money strong { font-size: 16px; font-weight: 650; }
+    .money small { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+    .history-action { width: 100%; margin-top: 12px; background: transparent; border: 1px solid var(--line); }
+    .history-action:hover { background: var(--sage); border-color: var(--sage); }
+    .history-action svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .balances-section { margin-top: 28px; }
+    .balance-list { display: grid; gap: 11px; margin: 0; padding: 0; list-style: none; }
+    .member { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; min-height: 82px; padding: 18px 20px; border-radius: 17px; background: var(--surface); }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; font-size: 12px; font-weight: 700; color: #374438; }
+    .avatar--1 { background: #edc5a9; } .avatar--2 { background: #d4dfba; } .avatar--3 { background: #dbd0e8; } .avatar--4 { background: #cbdde2; } .avatar--5 { background: #e6d9b9; }
+    .name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+    .member .money strong { font-size: 18px; }
+    .member .money small { color: inherit; }
+    .receives { color: var(--green); } .owes { color: var(--due); } .settled { color: var(--muted); }
+    .demo-note { margin-top: 28px; max-width: 75ch; font-size: 11px; color: var(--muted); line-height: 1.7; }
+    dialog { width: min(600px, calc(100vw - 40px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); padding: 0; border: 0; border-radius: 24px; background: var(--background); color: var(--ink); }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    .history-shell { display: flex; flex-direction: column; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); }
+    .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px 16px 24px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .modal-heading h2 { font-size: 20px; }
+    .modal-heading p { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+    .close { width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); font-size: 27px; }
+    .history-content { overflow-y: auto; padding: 4px 24px 24px; }
+    .month-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 22px 0 12px; }
+    .month-heading h3 { margin: 0; font-size: 14px; font-weight: 600; }
+    .month-heading span { color: var(--muted); font-size: 11px; }
+    .history-content .expense h3 { font-size: 14px; }
+    @media (max-width: 767px) {
+      main { max-width: 460px; padding: 28px 20px 36px; }
+      h1 { font-size: 28px; } h2 { font-size: 18px; }
+      .expense { padding: 16px; gap: 12px; }
+      .money strong { font-size: 15px; }
+      .member { padding: 18px; }
+      .member .button { margin-left: 50px; flex-basis: calc(100% - 50px); }
+      dialog { width: 100%; max-width: none; margin: auto 0 0; max-height: 94vh; max-height: 94dvh; border-radius: 24px 24px 0 0; }
+      .history-shell { max-height: 94vh; max-height: 94dvh; }
+      .modal-heading { padding-left: 20px; }
+      .history-content { padding: 4px 20px calc(24px + env(safe-area-inset-bottom)); }
+    }
+  </style>
+</head>
+<body>
+  <aside class="review" aria-label="Opciones del borrador"><p>Últimos 4 gastos · Historial completo en un modal · Datos de ejemplo</p><label class="theme">Tema<select id="theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro</option></select></label></aside>
+  <main>
+    <header class="heading"><div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div><button class="button" disabled>＋ Añadir gasto</button></header>
+    <section aria-labelledby="expenses-title">
+      <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><span class="count" id="recent-count"></span></div>
+      <ul class="expense-list" id="recent-expenses" aria-label="Los cuatro gastos más recientes"></ul>
+      <button class="button history-action" id="show-all" aria-haspopup="dialog">Mostrar todo<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+    </section>
+    <section class="balances-section" aria-labelledby="balances-title"><div class="section-heading"><h2 id="balances-title">Saldos</h2><span class="count">5 compañeros</span></div><ul class="balance-list" id="balances" aria-label="Saldos de ejemplo"></ul></section>
+    <p class="demo-note">Borrador visual sin conexión a Firebase. El historial contiene ocho gastos ilustrativos; los saldos se calculan con todos ellos, no solo con los cuatro visibles. Los botones de añadir y registrar devolución están desactivados en este borrador.</p>
+  </main>
+  <dialog id="history-modal" aria-labelledby="history-title" aria-describedby="history-description">
+    <div class="history-shell">
+      <header class="modal-heading"><div><h2 id="history-title">Todos los gastos</h2><p id="history-description">8 gastos, del más reciente al más antiguo</p></div><button class="close" id="close" aria-label="Cerrar historial">×</button></header>
+      <div class="history-content" id="history-content"></div>
+    </div>
+  </dialog>
+  <script>
+    // Review-only data. All expenses are shared equally among the five sample members.
+    const mates = [{ id: '1', name: 'Efra', avatar: 'E' }, { id: '2', name: 'David', avatar: 'D' }, { id: '3', name: 'Ainara', avatar: 'A' }, { id: '4', name: 'Izaro', avatar: 'I' }, { id: '5', name: 'Marcela', avatar: 'M' }];
+    const expenses = [
+      { title: 'Compra del supermercado', date: '2026-10-15', payerId: '1', cents: 4250 },
+      { title: 'Productos de limpieza', date: '2026-10-13', payerId: '5', cents: 1250 },
+      { title: 'Factura de internet', date: '2026-10-10', payerId: '2', cents: 3000 },
+      { title: 'Bombillas para el salón', date: '2026-10-08', payerId: '3', cents: 1000 },
+      { title: 'Factura de la luz', date: '2026-10-04', payerId: '1', cents: 6500 },
+      { title: 'Compra del supermercado', date: '2026-10-01', payerId: '4', cents: 3500 },
+      { title: 'Papel y bolsas de basura', date: '2026-09-28', payerId: '5', cents: 1500 },
+      { title: 'Factura del agua', date: '2026-09-21', payerId: '2', cents: 4500 },
+    ];
+    const byId = (id) => document.getElementById(id);
+    const currency = (cents) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+    const dateValue = (key) => new Date(key + 'T12:00:00');
+    function expenseRow(expense) {
+      const row = document.createElement('li'); row.className = 'expense';
+      const copy = document.createElement('div'); copy.className = 'expense-copy';
+      const title = document.createElement('h3'); title.textContent = expense.title;
+      const meta = document.createElement('p'); const time = document.createElement('time'); time.dateTime = expense.date;
+      time.textContent = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(dateValue(expense.date));
+      meta.append(time, document.createTextNode(' · Pagó ' + mates.find((mate) => mate.id === expense.payerId).name));
+      const participants = document.createElement('p'); participants.className = 'participants'; participants.textContent = 'Compartido entre cinco'; copy.append(title, meta, participants);
+      const money = document.createElement('div'); money.className = 'money'; const total = document.createElement('strong'); total.textContent = currency(expense.cents);
+      const share = document.createElement('small'); share.textContent = currency(expense.cents / mates.length) + ' / persona'; money.append(total, share); row.append(copy, money); return row;
+    }
+    byId('recent-count').textContent = '4 de ' + expenses.length;
+    expenses.slice(0, 4).forEach((expense) => byId('recent-expenses').append(expenseRow(expense)));
+    const groups = new Map();
+    for (const expense of expenses) { const month = expense.date.slice(0, 7); if (!groups.has(month)) groups.set(month, []); groups.get(month).push(expense); }
+    for (const [month, records] of groups) {
+      const section = document.createElement('section'); const heading = document.createElement('div'); heading.className = 'month-heading';
+      const title = document.createElement('h3'); title.id = 'month-' + month;
+      const label = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(dateValue(month + '-01'));
+      title.textContent = label.charAt(0).toUpperCase() + label.slice(1); section.setAttribute('aria-labelledby', title.id);
+      const count = document.createElement('span'); count.textContent = records.length + (records.length === 1 ? ' gasto' : ' gastos'); heading.append(title, count);
+      const list = document.createElement('ul'); list.className = 'expense-list'; records.forEach((expense) => list.append(expenseRow(expense))); section.append(heading, list); byId('history-content').append(section);
+    }
+    const totalCents = expenses.reduce((sum, expense) => sum + expense.cents, 0);
+    mates.forEach((mate, index) => {
+      const balance = expenses.filter((expense) => expense.payerId === mate.id).reduce((sum, expense) => sum + expense.cents, 0) - totalCents / mates.length;
+      const row = document.createElement('li'); row.className = 'member';
+      const avatar = document.createElement('span'); avatar.className = 'avatar avatar--' + (index + 1); avatar.textContent = mate.avatar; avatar.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.className = 'name'; name.textContent = mate.name;
+      const money = document.createElement('div'); money.className = 'money ' + (balance > 0 ? 'receives' : balance < 0 ? 'owes' : 'settled');
+      const amount = document.createElement('strong'); amount.textContent = (balance > 0 ? '+' : balance < 0 ? '−' : '') + currency(Math.abs(balance));
+      const status = document.createElement('small'); status.textContent = balance > 0 ? 'A su favor' : balance < 0 ? 'Debe' : 'Al día'; money.append(amount, status); row.append(avatar, name, money);
+      if (balance < 0) { const action = document.createElement('button'); action.className = 'button'; action.disabled = true; action.textContent = 'Registrar devolución'; row.append(action); }
+      byId('balances').append(row);
+    });
+    const modal = byId('history-modal');
+    byId('show-all').addEventListener('click', () => { byId('history-content').scrollTop = 0; modal.showModal(); });
+    byId('close').addEventListener('click', () => modal.close());
+    byId('theme').addEventListener('change', (event) => { if (event.target.value === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = event.target.value; });
+  </script>
+</body>
+</html>

@@ -1,5 +1,9 @@
 import type { ExpenseShare } from '../interfaces/expense.interface';
 
+export function filterAmountInput(value: string, previousValue: string): string {
+  return /^(?:\d+(?:[.,]\d{0,2})?)?$/.test(value) ? value : previousValue;
+}
+
 export function parseExpenseAmount(value: string): number | null {
   const normalized = value.trim().replace(',', '.');
   if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return null;

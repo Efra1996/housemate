@@ -8,41 +8,56 @@
     </ion-header>
     <ion-content>
       <div class="form-content">
-        <ion-select label="¿Quién ha pagado?" labelPlacement="stacked" interface="alert" placeholder="Selecciona tu nombre"
-          cancelText="Cancelar" okText="Elegir" [value]="payerId()" [disabled]="saving()" (ionChange)="selectPayer($event.detail.value)">
-          @for (mate of mates; track mate.id) { <ion-select-option [value]="mate.id">{{ mate.nombre }}</ion-select-option> }
+        <ion-select label="¿Quién ha pagado?" labelPlacement="floating" fill="outline" mode="md" interface="popover" placeholder="Selecciona quién ha pagado"
+          aria-required="true" [value]="payerId()" [disabled]="saving() || !mates().length" (ionChange)="selectPayer($event.detail.value)">
+          @for (mate of mates(); track mate.id) { <ion-select-option [value]="mate.id">{{ mate.nombre }}</ion-select-option> }
         </ion-select>
-        <ion-textarea label="Descripción" labelPlacement="stacked" placeholder="Por ejemplo, compra del supermercado"
-          [maxlength]="200" [autoGrow]="true" [rows]="2" [value]="description()" [disabled]="saving()" (ionInput)="description.set($event.detail.value ?? '')"></ion-textarea>
-        <ion-input label="Importe en euros" labelPlacement="stacked" type="text" inputmode="decimal" placeholder="50,00"
-          [value]="amount()" [disabled]="saving()" (ionInput)="amount.set($event.detail.value ?? '')"><span slot="end" aria-hidden="true">€</span></ion-input>
+        <ion-textarea label="Descripción" labelPlacement="floating" fill="outline" mode="md" placeholder="Por ejemplo, compra del supermercado"
+          aria-required="true" [maxlength]="200" [autoGrow]="true" [rows]="2" [value]="description()" [disabled]="saving()" (ionInput)="description.set($event.detail.value ?? '')"></ion-textarea>
+        <ion-input #amountInput label="Importe en euros" labelPlacement="floating" fill="outline" mode="md" type="text" inputmode="decimal" placeholder="50,00"
+          aria-required="true" [value]="amount()" [disabled]="saving()" (ionInput)="setAmount($event.detail.value ?? '', amountInput)"><span slot="end" aria-hidden="true">€</span></ion-input>
         @if (amount().trim() && amountCents() === null) { <p class="hint">Introduce un importe mayor que cero, con un máximo de dos decimales.</p> }
         <section aria-labelledby="participants-title">
-          <div class="participants-heading"><h2 id="participants-title">¿Entre quiénes se reparte?</h2><ion-button fill="clear" size="small" [disabled]="saving()" (click)="selectAll()">Seleccionar todos</ion-button></div>
-          <ion-list lines="none" class="mates">
-            @for (mate of mates; track mate.id) {
+          <h2 id="participants-title">¿Entre quiénes se reparte?</h2>
+          <p class="hint">Selecciona los compañeros que comparten este gasto.</p>
+          <ion-list lines="none" class="mates" aria-label="Compañeros que comparten el gasto">
+            <ion-item class="select-all" lines="none">
+              <ion-checkbox justify="space-between" [checked]="allParticipantsSelected()" [indeterminate]="someParticipantsSelected()"
+                [disabled]="saving() || !payerId() || !availableParticipants().length" (ionChange)="toggleAllParticipants($event.detail.checked)">Todos</ion-checkbox>
+            </ion-item>
+            @for (mate of availableParticipants(); track mate.id) {
               <ion-item lines="none">
-                <ion-avatar slot="start" aria-hidden="true"><span>{{ mate.avatar }}</span></ion-avatar>
-                <ion-checkbox justify="space-between" [checked]="participantIds().includes(mate.id)" [disabled]="saving()"
-                  (ionChange)="changeParticipant(mate.id, $event.detail.checked)">{{ mate.nombre }}</ion-checkbox>
+                <ion-checkbox justify="space-between" [checked]="participantIds().includes(mate.id)" [disabled]="saving() || !payerId()"
+                  (ionChange)="changeParticipant(mate.id, $event.detail.checked)">
+                  <span class="mate-label"><ion-avatar [class]="'avatar avatar--' + (mates().indexOf(mate) % 5 + 1)" aria-hidden="true"><span>{{ mate.avatar }}</span></ion-avatar><span>{{ mate.nombre }}</span></span>
+                </ion-checkbox>
               </ion-item>
             }
           </ion-list>
-          <p class="hint">Elige también al pagador si participa en el gasto.</p>
+          <p class="hint">{{ payerId() ? 'El pagador se incluye automáticamente en el reparto.' : 'Selecciona primero quién ha pagado.' }}</p>
+          @if (payerId() && !participantIds().length) { <p class="hint">Selecciona al menos otro compañero para compartir el gasto.</p> }
         </section>
-        <div class="preview" aria-live="polite" aria-atomic="true">
-          <strong>{{ preview() }}</strong>
+        <section class="split-preview" aria-labelledby="split-title" aria-live="polite" aria-atomic="true">
+          <h2 id="split-title">Reparto del gasto</h2>
           @if (shares().length) {
-            <p>{{ formatAmount(amountCents() ?? 0) }} entre {{ participantIds().length }}.</p>
-            @if (hasRemainder()) { <p>Los céntimos restantes se asignan por orden de compañero.</p> }
-          }
-        </div>
+            <p class="hint">{{ formatAmount(amountCents() ?? 0) }} entre {{ shares().length }} personas, incluido el pagador.</p>
+            <dl>
+              @for (share of shares(); track share.mateId) {
+                <div><dt>{{ mateName(share.mateId) }}{{ share.mateId === payerId() ? ' (pagador)' : '' }}</dt><dd>{{ formatAmount(share.amountCents) }}</dd></div>
+              }
+            </dl>
+            @if (hasRemainder()) { <p class="hint">Algunas partes difieren en un céntimo para cuadrar el total.</p> }
+          } @else { <p class="hint">Elige el pagador, selecciona los compañeros e introduce un importe válido para ver el reparto.</p> }
+        </section>
         @if (error()) { <p class="error-message" role="alert">{{ error() }}</p> }
       </div>
     </ion-content>
     <ion-footer class="ion-no-border"><div class="form-footer">
       <ion-button fill="outline" [disabled]="saving()" (click)="close()">Cancelar</ion-button>
-      <ion-button [disabled]="!canSave()" (click)="save()">{{ saving() ? 'Guardando…' : 'Guardar gasto' }}</ion-button>
+      <ion-button [disabled]="!canSave()" (click)="save()">
+        @if (saving()) { <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner> }
+        {{ saving() ? 'Guardando…' : 'Guardar gasto' }}
+      </ion-button>
     </div></ion-footer>
   </ng-template>
 </ion-modal>

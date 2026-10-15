@@ -146,7 +146,7 @@ export class CalendarPage {
       const code = error instanceof Error && 'code' in error ? error.code : undefined;
       this.error.set(code === 'permission-denied'
         ? 'No se ha podido acceder a las tareas o los compañeros.'
-        : 'No se pudo cargar el calendario. Comprueba la conexión y la configuración de los datos.');
+        : 'No se pudo cargar el calendario. Comprueba la conexión y vuelve a intentarlo.');
     } finally {
       if (requestId === this.requestId) this.loading.set(false);
     }

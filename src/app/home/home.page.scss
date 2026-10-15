@@ -1,7 +1,9 @@
 .dashboard {
+  --gutter: 40px;
+  --top: 42px;
   max-width: 1056px;
   margin: 0 auto;
-  padding: calc(42px + var(--ion-safe-area-top, 0px)) max(40px, var(--ion-safe-area-right, 0px)) 32px max(40px, var(--ion-safe-area-left, 0px));
+  padding: calc(var(--top) + var(--ion-safe-area-top, 0px)) max(var(--gutter), var(--ion-safe-area-right, 0px)) 32px max(var(--gutter), var(--ion-safe-area-left, 0px));
 }
 
 .page-heading {
@@ -25,9 +27,9 @@ h1 {
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: 0;
+  min-height: 44px;
+  text-transform: none;
   color: var(--ion-color-primary);
   font-size: 14px;
   font-weight: 600;
@@ -112,6 +114,9 @@ ion-progress-bar {
   .avatar { width: 28px; height: 28px; border-color: var(--housemate-surface); }
 }
 
+.record::part(native) { display: flex; gap: inherit; align-items: inherit; }
+.record::part(native):focus-visible { outline: 2px solid var(--ion-color-primary); }
+
 .icon-tile {
   display: grid;
   place-items: center;
@@ -135,16 +140,16 @@ ion-progress-bar {
 }
 
 .amount { font-size: 14px; font-weight: 650; white-space: nowrap; }
-.example-note { margin: 24px 0 0; color: var(--housemate-muted); font-size: 11px; line-height: 1.6; }
 
 @media (max-width: 700px) {
   .dashboard {
+    --gutter: 20px;
+    --top: 28px;
     max-width: 460px;
-    padding: calc(28px + var(--ion-safe-area-top, 0px)) max(20px, var(--ion-safe-area-right, 0px)) 28px max(20px, var(--ion-safe-area-left, 0px));
+    padding-bottom: 28px;
   }
-  .brand { padding: 12px; background: var(--housemate-surface); border-radius: 50%; }
+  .brand { width: 44px; padding: 0; --padding-start: 0; --padding-end: 0; background: var(--housemate-surface); border-radius: 50%; }
   .brand span { display: none; }
-  .brand ion-icon { font-size: 24px; }
   h1 { font-size: 29px; }
   .members { margin-bottom: 23px; }
   .progress-card {
@@ -166,7 +171,7 @@ ion-progress-bar {
 }
 
 @media (max-width: 350px) {
-  .dashboard { padding-left: max(14px, var(--ion-safe-area-left, 0px)); padding-right: max(14px, var(--ion-safe-area-right, 0px)); }
+  .dashboard { --gutter: 14px; }
   .record { gap: 8px; }
   .icon-tile { width: 36px; height: 40px; }
   .section-heading h2 { font-size: 17px; }

@@ -105,6 +105,11 @@ export class TasksService {
   }
 
   async getPendingTasksForCurrentWeek(): Promise<Task[]> {
+    const tasks = await this.getTasksForCurrentWeek();
+    return tasks.filter((task) => task.todo);
+  }
+
+  async getTasksForCurrentWeek(): Promise<Task[]> {
     // Calendar boundaries follow the visitor's local time zone, starting Monday.
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -112,8 +117,7 @@ export class TasksService {
     const end = new Date(start);
     end.setDate(start.getDate() + 7);
 
-    const tasks = await this.getTasksForDateRange(start, end);
-    return tasks.filter((task) => task.todo);
+    return this.getTasksForDateRange(start, end);
   }
 
   // Inclusive start and exclusive end; includes pending and completed tasks.

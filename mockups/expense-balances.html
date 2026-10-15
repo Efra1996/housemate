@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Saldos</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269;
+      --line: #e5e9df; --due: #92601e;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; }
+    }
+    :root[data-theme="light"] { color-scheme: light; --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3; --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df; --due: #92601e; }
+    :root[data-theme="dark"] { color-scheme: dark; --background: #18201c; --surface: #242e28; --sage: #2b3d2e; --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b; --due: #e5bd82; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+    .review { padding: 14px max(20px, calc((100vw - 960px) / 2)); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .review p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .theme { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    select { padding: 10px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+    main { max-width: 1024px; margin: auto; padding: 34px 32px 40px; }
+    .heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -.8px; }
+    .add { min-height: 44px; padding: 12px 15px; border: 0; border-radius: 13px; color: var(--green); background: var(--sage); font-size: 13px; font-weight: 600; }
+    .overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-height: 28px; margin-bottom: 15px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
+    .count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .balance-list { list-style: none; padding: 0 18px; margin: 0; border-radius: 17px; background: var(--surface); }
+    .member { display: flex; align-items: center; gap: 12px; min-height: 82px; padding: 16px 0; }
+    .member + .member { border-top: 1px solid var(--line); }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; font-size: 12px; font-weight: 700; color: #374438; }
+    .avatar--1 { background: #edc5a9; } .avatar--2 { background: #d4dfba; } .avatar--3 { background: #dbd0e8; } .avatar--4 { background: #cbdde2; } .avatar--5 { background: #e6d9b9; }
+    .name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+    .balance { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .balance strong { display: block; font-size: 18px; font-weight: 650; }
+    .balance small { display: block; margin-top: 5px; font-size: 11px; }
+    .receives { color: var(--green); } .owes { color: var(--due); } .settled { color: var(--muted); }
+    .explanation { margin: 12px 2px 0; font-size: 12px; line-height: 1.7; color: var(--muted); max-width: 65ch; }
+    .expense-list { display: grid; gap: 11px; }
+    .expense { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px; border-radius: 17px; background: var(--surface); }
+    .expense-copy { min-width: 0; }
+    h3 { margin: 0 0 7px; font-size: 14px; font-weight: 600; line-height: 1.4; }
+    .expense p { margin: 0; font-size: 12px; line-height: 1.7; color: var(--muted); }
+    .expense-money { text-align: right; flex-shrink: 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .expense-money strong { font-weight: 650; }
+    .expense-money small { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+    .demo-note { margin-top: 30px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    @media (max-width: 767px) {
+      main { max-width: 460px; padding: 28px 20px 36px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 18px; }
+      .review { flex-wrap: wrap; }
+      .expense { padding: 16px; gap: 12px; }
+      .expense-money { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="review" aria-label="Opciones del borrador">
+    <p>Borrador de diseño · Datos de ejemplo, sin conexión a Firebase</p>
+    <label class="theme">Tema<select id="theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro</option></select></label>
+  </aside>
+  <main>
+    <header class="heading"><div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div><button class="add" disabled>＋ Añadir gasto</button></header>
+    <div class="overview">
+      <section class="expenses" aria-labelledby="expenses-title">
+        <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><span class="count">2 gastos</span></div>
+        <div class="expense-list">
+          <article class="expense"><div class="expense-copy"><h3>Productos de limpieza</h3><p>Pagó David</p><p>Compartido entre David y Ainara</p></div><div class="expense-money"><strong>20,00 €</strong><small>10,00 € / persona</small></div></article>
+          <article class="expense"><div class="expense-copy"><h3>Compra del supermercado</h3><p>Pagó Efra</p><p>Compartido entre los cinco compañeros</p></div><div class="expense-money"><strong>50,00 €</strong><small>10,00 € / persona</small></div></article>
+        </div>
+      </section>
+      <section class="balances" aria-labelledby="balances-title">
+        <div class="section-heading"><h2 id="balances-title">Saldos</h2><span class="count">5 compañeros</span></div>
+        <ul class="balance-list" aria-label="Saldo de cada compañero">
+          <li class="member"><span class="avatar avatar--1" aria-hidden="true">E</span><span class="name">Efra</span><div class="balance receives"><strong>+40,00 €</strong><small>Por recibir</small></div></li>
+          <li class="member"><span class="avatar avatar--2" aria-hidden="true">D</span><span class="name">David</span><div class="balance settled"><strong>0,00 €</strong><small>Al día</small></div></li>
+          <li class="member"><span class="avatar avatar--3" aria-hidden="true">A</span><span class="name">Ainara</span><div class="balance owes"><strong>−20,00 €</strong><small>Por aportar</small></div></li>
+          <li class="member"><span class="avatar avatar--4" aria-hidden="true">I</span><span class="name">Izaro</span><div class="balance owes"><strong>−10,00 €</strong><small>Por aportar</small></div></li>
+          <li class="member"><span class="avatar avatar--5" aria-hidden="true">M</span><span class="name">Marcela</span><div class="balance owes"><strong>−10,00 €</strong><small>Por aportar</small></div></li>
+        </ul>
+        <p class="explanation">Lo que ha pagado cada compañero menos su parte de los gastos. Incluye todos los gastos registrados.</p>
+      </section>
+    </div>
+    <p class="demo-note">Ejemplo ilustrativo: Efra paga 50 € entre cinco y David paga 20 € entre David y Ainara. No se han registrado reembolsos. Este borrador no guarda ni modifica datos.</p>
+  </main>
+  <script>
+    document.getElementById('theme').addEventListener('change', (event) => {
+      const theme = event.target.value;
+      if (theme === 'system') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', theme);
+    });
+  </script>
+</body>
+</html>

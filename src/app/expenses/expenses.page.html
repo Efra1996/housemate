@@ -2,32 +2,132 @@
   <main class="expenses-page">
     <header class="page-heading">
       <div><p class="eyebrow">Las cuentas, claras</p><h1>Gastos</h1></div>
-      <ion-button class="add-expense" [disabled]="!!error()" aria-haspopup="dialog" (click)="formOpen.set(true)">
+      <ion-button class="add-expense" [disabled]="loading() || !!error() || !mates().length" aria-haspopup="dialog" (click)="formOpen.set(true)">
         <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>Añadir gasto
       </ion-button>
     </header>
-    @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
-    <section aria-labelledby="expenses-title">
-      <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><ion-text>{{ error() ? 'No disponible' : expenses().length + (expenses().length === 1 ? ' gasto' : ' gastos') }}</ion-text></div>
-      @if (error()) {
+    @if (notice()) { <ion-text color="primary"><p role="status">{{ notice() }}</p></ion-text> }
+    <section aria-labelledby="expenses-title" [attr.aria-busy]="loading()">
+      <div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><ion-text>{{ loading() ? 'Cargando…' : error() ? 'No disponible' : recentExpenses().length + ' de ' + expenses().length }}</ion-text></div>
+      @if (loading()) {
+        <ion-card class="empty-state" aria-label="Cargando gastos"><ion-skeleton-text [animated]="true" style="width: 75%; height: 16px"></ion-skeleton-text><ion-skeleton-text [animated]="true" style="width: 55%; height: 12px"></ion-skeleton-text></ion-card>
+      } @else if (error()) {
         <ion-card class="empty-state" role="alert"><h3>No se pudieron cargar los gastos</h3><p>{{ error() }}</p><ion-button fill="clear" (click)="loadData()">Reintentar</ion-button></ion-card>
       } @else if (expenses().length) {
-        <ion-list class="record-list" lines="none" aria-label="Gastos registrados, del más reciente al más antiguo">
-          @for (expense of expenses(); track expense.id) {
-            <ion-card class="record">
-              <ion-item lines="none">
-                <ion-icon class="expense-icon" slot="start" name="receipt-outline" aria-hidden="true"></ion-icon>
-                <ion-label class="ion-text-wrap"><h3>{{ expense.description }}</h3><p>{{ dateLabel(expense) }} · Pagó {{ mateName(expense.payerId) }}</p><p>Compartido entre {{ expense.shares.length }}: {{ participantsLabel(expense) }}</p></ion-label>
-                <ion-text class="money" slot="end"><strong>{{ formatAmount(expense.amountCents) }}</strong><span class="detail">{{ shareLabel(expense) }} / persona</span></ion-text>
-              </ion-item>
+        <ion-list class="record-list" lines="none" aria-label="Hasta cuatro gastos recientes, del más reciente al más antiguo">
+          @for (expense of recentExpenses(); track expense.id) {
+            <ng-container [ngTemplateOutlet]="expenseRecord" [ngTemplateOutletContext]="{ $implicit: expense }"></ng-container>
+          }
+        </ion-list>
+        <ion-button class="show-all" expand="block" fill="outline" aria-haspopup="dialog" (click)="historyOpen.set(true)">Mostrar todo<ion-icon slot="end" name="chevron-forward-outline" aria-hidden="true"></ion-icon></ion-button>
+      } @else {
+        <ion-card class="empty-state"><h3>Todavía no hay gastos</h3><p>Añade un gasto y elige los compañeros entre los que se reparte.</p></ion-card>
+      }
+    </section>
+    <section class="balances-section" aria-labelledby="balances-title" [attr.aria-busy]="loading()">
+      <div class="section-heading"><h2 id="balances-title">Saldos</h2><ion-text>{{ loading() ? 'Cargando…' : error() ? 'No disponible' : mates().length + (mates().length === 1 ? ' compañero' : ' compañeros') }}</ion-text></div>
+      @if (loading()) {
+        <ion-card class="empty-state" aria-label="Cargando saldos"><ion-skeleton-text [animated]="true" style="width: 65%; height: 16px"></ion-skeleton-text><ion-skeleton-text [animated]="true" style="width: 40%; height: 12px"></ion-skeleton-text></ion-card>
+      } @else if (error()) {
+        <p class="balances-note">No se pudieron cargar los saldos. Reintenta la carga de los gastos.</p>
+      } @else if (balances().length) {
+        <ion-list class="balance-list" lines="none" role="list" aria-label="Saldo de cada compañero">
+          @for (balance of balances(); track balance.mate.id; let index = $index) {
+            <ion-card class="record balance-card" role="listitem">
+              <div class="balance-row">
+                <ion-avatar [class]="'avatar avatar--' + (index % 5 + 1)" aria-hidden="true"><span>{{ balance.mate.avatar }}</span></ion-avatar>
+                <div class="balance-name"><h3>{{ balance.mate.nombre }}</h3></div>
+                <ion-text [class]="'money balance--' + balance.status"><strong>{{ balance.amountLabel }}</strong><span class="detail">{{ balance.statusLabel }}</span></ion-text>
+                @if (balance.amountCents < 0) {
+                  <ion-button class="reimbursement-button" aria-haspopup="dialog" [attr.aria-label]="'Registrar devolución de ' + balance.mate.nombre" (click)="reimbursementSenderId.set(balance.mate.id)">Registrar devolución</ion-button>
+                }
+              </div>
             </ion-card>
           }
         </ion-list>
+        <p class="balances-note">Los saldos incluyen todos los gastos compartidos y las devoluciones registradas.</p>
       } @else {
-        <ion-card class="empty-state"><h3>Todavía no hay gastos</h3><p>Añade un gasto y elige los compañeros entre los que se reparte.</p><ion-button fill="outline" (click)="formOpen.set(true)">Añadir gasto</ion-button></ion-card>
+        <ion-card class="empty-state"><h3>No hay compañeros registrados</h3><p>Los saldos aparecerán cuando haya compañeros en el hogar.</p></ion-card>
       }
+      <ion-button class="show-all" expand="block" fill="outline" [disabled]="loading() || !!error()" aria-haspopup="dialog" (click)="reimbursementHistoryOpen.set(true)"><ion-icon slot="start" name="time-outline" aria-hidden="true"></ion-icon>Historial de devoluciones</ion-button>
     </section>
-    <p class="local-note">Los gastos se guardan solo en este navegador y no se comparten con otros dispositivos. Se pueden perder al borrar los datos del navegador. Los compañeros son de ejemplo.</p>
   </main>
 </ion-content>
-<app-expense-form [isOpen]="formOpen()" (saved)="onSaved($event)" (dismissed)="formOpen.set(false)"></app-expense-form>
+<ng-template #expenseRecord let-expense>
+  <ion-card class="record">
+    <ion-item lines="none">
+      <ion-icon class="expense-icon" slot="start" name="basket-outline" aria-hidden="true"></ion-icon>
+      <ion-label class="ion-text-wrap"><h3>{{ expense.description }}</h3><p><time [attr.datetime]="expense.createdAt">{{ dateLabel(expense) }}</time> · Pagó {{ mateName(expense.payerId) }}</p><p>Compartido entre {{ expense.shares.length }}</p></ion-label>
+      <ion-text class="money" slot="end"><strong>{{ formatAmount(expense.amountCents) }}</strong><span class="detail">{{ shareLabel(expense) }} / persona</span></ion-text>
+    </ion-item>
+  </ion-card>
+</ng-template>
+<ion-modal class="history-modal" [isOpen]="historyOpen()" (didDismiss)="historyOpen.set(false)" aria-labelledby="history-title">
+  <ng-template>
+    <ion-header class="ion-no-border"><ion-toolbar>
+      <ion-title id="history-title">Todos los gastos</ion-title>
+      <ion-buttons slot="end"><ion-button aria-label="Cerrar historial" (click)="historyOpen.set(false)"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+    </ion-toolbar></ion-header>
+    <ion-content>
+      <div class="history-content" [attr.aria-busy]="loading()">
+        @if (loading()) {
+          <ion-skeleton-text [animated]="true" style="width: 75%; height: 80px" aria-label="Cargando historial"></ion-skeleton-text>
+        } @else if (error()) {
+          <ion-card class="empty-state" role="alert"><h3>No se pudo cargar el historial</h3><p>{{ error() }}</p><ion-button fill="clear" (click)="loadData()">Reintentar</ion-button></ion-card>
+        } @else if (expenses().length) {
+          <p class="detail">{{ expenses().length }} {{ expenses().length === 1 ? 'gasto' : 'gastos' }}, del más reciente al más antiguo</p>
+          @for (group of expenseGroups(); track group.key) {
+            <section [attr.aria-labelledby]="'expense-month-' + group.key">
+              <div class="section-heading"><h3 [id]="'expense-month-' + group.key">{{ group.label }}</h3><ion-text>{{ group.expenses.length }} {{ group.expenses.length === 1 ? 'gasto' : 'gastos' }}</ion-text></div>
+              <ion-list class="record-list" lines="none" [attr.aria-label]="'Gastos de ' + group.label">
+                @for (expense of group.expenses; track expense.id) {
+                  <ng-container [ngTemplateOutlet]="expenseRecord" [ngTemplateOutletContext]="{ $implicit: expense }"></ng-container>
+                }
+              </ion-list>
+            </section>
+          }
+        } @else { <ion-card class="empty-state"><h3>Todavía no hay gastos</h3><p>Los gastos registrados aparecerán aquí.</p></ion-card> }
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<ion-modal class="history-modal" [isOpen]="reimbursementHistoryOpen()" (didDismiss)="reimbursementHistoryOpen.set(false)" aria-labelledby="reimbursement-history-title">
+  <ng-template>
+    <ion-header class="ion-no-border"><ion-toolbar>
+      <ion-title id="reimbursement-history-title">Devoluciones registradas</ion-title>
+      <ion-buttons slot="end"><ion-button aria-label="Cerrar historial de devoluciones" (click)="reimbursementHistoryOpen.set(false)"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+    </ion-toolbar></ion-header>
+    <ion-content>
+      <div class="history-content" [attr.aria-busy]="loading()">
+        @if (loading()) {
+          <ion-skeleton-text [animated]="true" style="width: 75%; height: 80px" aria-label="Cargando devoluciones"></ion-skeleton-text>
+        } @else if (error()) {
+          <ion-card class="empty-state" role="alert"><h3>No se pudo cargar el historial</h3><p>{{ error() }}</p><ion-button fill="clear" (click)="loadData()">Reintentar</ion-button></ion-card>
+        } @else if (reimbursements().length) {
+          <p class="detail">{{ reimbursements().length }} {{ reimbursements().length === 1 ? 'devolución registrada' : 'devoluciones registradas' }}, de la más reciente a la más antigua</p>
+          @for (group of reimbursementGroups(); track group.key) {
+            <section [attr.aria-labelledby]="'reimbursement-month-' + group.key">
+              <div class="section-heading"><h3 [id]="'reimbursement-month-' + group.key">{{ group.label }}</h3><ion-text>{{ group.reimbursements.length }} {{ group.reimbursements.length === 1 ? 'devolución' : 'devoluciones' }}</ion-text></div>
+              <ion-card class="record">
+                <ion-list class="ion-no-padding" lines="inset" [attr.aria-label]="'Devoluciones de ' + group.label">
+                  @for (entry of group.reimbursements; track entry.record.id) {
+                    <ion-item>
+                      <ion-avatar slot="start" [class]="entry.avatarClass" aria-hidden="true"><span>{{ entry.avatar }}</span></ion-avatar>
+                      <ion-label class="ion-text-wrap"><h3 [attr.aria-label]="entry.senderName + ' a ' + entry.recipientName">{{ entry.senderName }} <span aria-hidden="true">→</span> {{ entry.recipientName }}</h3><p>Registrado el <time [attr.datetime]="entry.record.createdAt">{{ entry.registeredLabel }}</time></p></ion-label>
+                      <ion-text class="money" slot="end"><strong>{{ formatAmount(entry.record.amountCents) }}</strong></ion-text>
+                    </ion-item>
+                  }
+                </ion-list>
+              </ion-card>
+            </section>
+          }
+          <p class="balances-note">Aquí solo se registran devoluciones ya realizadas. Housemate no envía dinero.</p>
+        } @else {
+          <ion-card class="empty-state"><ion-icon name="time-outline" color="primary" aria-hidden="true"></ion-icon><h3>Todavía no hay devoluciones registradas.</h3><p>Cuando registréis una devolución desde Saldos, aparecerá aquí.</p></ion-card>
+        }
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<app-expense-form [isOpen]="formOpen()" [mates]="mates()" (saved)="onSaved()" (dismissed)="formOpen.set(false)"></app-expense-form>
+<app-reimbursement-form [isOpen]="reimbursementSenderId() !== null" [senderId]="reimbursementSenderId()" [mates]="mates()" [balances]="balances()" (saved)="onReimbursementSaved()" (dismissed)="reimbursementSenderId.set(null)"></app-reimbursement-form>
