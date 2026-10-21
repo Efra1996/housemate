@@ -63,9 +63,18 @@ describe('TasksService weekly saving', () => {
     const schedule = proposal();
     await service.saveWeeklySchedule(schedule, ids);
     expect(firestoreMocks.runTransaction).toHaveBeenCalledTimes(1);
-    expect(transaction.get.mock.calls.map(([reference]) => reference.id)).toEqual(CHORE_ORDER.map((id) => `2026-10-12_${id}`));
+    expect(transaction.get.mock.calls.map(([reference]) => reference.path)).toEqual([
+      ...CHORE_ORDER.map((id) => `tasks/2026-10-12_${id}`), 'weeklyNotificationEvents/2026-10-12',
+    ]);
     expect(transaction.get.mock.invocationCallOrder.every((order) => order < transaction.set.mock.invocationCallOrder[0])).toBe(true);
-    expect(transaction.set).toHaveBeenCalledTimes(4);
+    expect(transaction.set).toHaveBeenCalledTimes(5);
+    expect(transaction.set).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'weeklyNotificationEvents/2026-10-12' }),
+      {
+        weekStart: '2026-10-12', choreIds: schedule.assignments.map((assignment) => assignment.choreId),
+        createdAt: expect.anything(),
+      },
+    );
     for (const assignment of schedule.assignments) {
       expect(transaction.set).toHaveBeenCalledWith(expect.objectContaining({ id: assignment.id }), {
         task: assignment.task, mate: assignment.mate, choreId: assignment.choreId,
@@ -79,7 +88,7 @@ describe('TasksService weekly saving', () => {
     const skippedId = schedule.skippedChores[0].choreId;
     transaction.get.mockImplementation(async (reference) => ({ exists: () => reference.id === `2026-10-12_${skippedId}` }));
     await expect(service.saveWeeklySchedule(schedule, ['mate-1'])).rejects.toMatchObject({ code: 'week-already-organized' });
-    expect(transaction.get).toHaveBeenCalledTimes(4);
+    expect(transaction.get).toHaveBeenCalledTimes(5);
     expect(transaction.set).not.toHaveBeenCalled();
   });
 
@@ -94,7 +103,7 @@ describe('TasksService weekly saving', () => {
   it('ignores deadlines of tasks belonging to another week', async () => {
     vi.mocked(service.getTasksForDateRange).mockResolvedValue([existing('2026-10-05')]);
     await service.saveWeeklySchedule(proposal(), ids);
-    expect(transaction.set).toHaveBeenCalledTimes(4);
+    expect(transaction.set).toHaveBeenCalledTimes(5);
   });
 
   it('checks current eligibility instead of trusting the preview', async () => {

@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Housemate",
+  "short_name": "Housemate",
+  "lang": "es",
+  "start_url": "/tabs/home",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f2",
+  "theme_color": "#347653",
+  "icons": [
+    { "src": "/assets/icon/housemate-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon/housemate-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

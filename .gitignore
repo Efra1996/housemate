@@ -31,6 +31,9 @@ log.txt
 
 # Node
 /node_modules
+/functions/node_modules
+/functions/lib
+/.firebase
 npm-debug.log
 yarn-error.log
 

@@ -48,6 +48,8 @@
       </svg>
     </ion-card>
 
+    <app-notification-preferences></app-notification-preferences>
+
     <div class="sections">
       <section aria-labelledby="tasks-title">
         <div class="section-heading"><h2 id="tasks-title">Tareas de la semana</h2><span>{{ tasksLoading() ? 'Cargando…' : tasksError() ? 'No disponible' : tasks().length + (tasks().length === 1 ? ' tarea' : ' tareas') }}</span></div>

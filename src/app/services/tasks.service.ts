@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Timestamp, collection, doc, getDocsFromServer, orderBy, query, runTransaction, updateDoc, where } from 'firebase/firestore';
+import { Timestamp, collection, doc, getDocsFromServer, orderBy, query, runTransaction, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import type { Task } from '../interfaces/task.interface';
 import type { WeeklySchedule } from '../interfaces/weekly-schedule.interface';
 import { FirebaseService } from './firebase.service';
@@ -52,9 +52,13 @@ export class TasksService {
     await this.ensureWeekIsEmpty(schedule.weekStart);
     const firestore = this.firebase.firestore;
     const references = CHORE_ORDER.map((id) => doc(firestore, 'tasks', `${schedule.weekStart}_${id}`));
+    const notification = doc(firestore, 'weeklyNotificationEvents', schedule.weekStart);
     await runTransaction(firestore, async (transaction) => {
       // Read every chore ID, including skipped ones, before writing any tasks.
-      const snapshots = await Promise.all(references.map((reference) => transaction.get(reference)));
+      const [snapshots, existingNotification] = await Promise.all([
+        Promise.all(references.map((reference) => transaction.get(reference))),
+        transaction.get(notification),
+      ]);
       if (snapshots.some((snapshot) => snapshot.exists())) throw this.weekConflict();
       for (const assignment of schedule.assignments) {
         const reference = references.find((entry) => entry.id === assignment.id);
@@ -64,6 +68,15 @@ export class TasksService {
           mate: mates.find((mate) => mate.id === assignment.mateId)?.nombre,
           choreId: assignment.choreId, mateId: assignment.mateId, weekStart: schedule.weekStart,
           date: Timestamp.fromDate(assignment.date), todo: true,
+        });
+      }
+      // A single event shares the task commit; previews/status edits never notify.
+      // Retain an existing event when deleted tasks are later recreated.
+      if (!existingNotification.exists()) {
+        transaction.set(notification, {
+          weekStart: schedule.weekStart,
+          choreIds: schedule.assignments.map((assignment) => assignment.choreId),
+          createdAt: serverTimestamp(),
         });
       }
     });

@@ -9,6 +9,7 @@ import { formatExpenseAmount } from '../expenses/expense-calculations';
 import { TasksService } from '../services/tasks.service';
 import { MatesService } from '../services/mates.service';
 import { TaskDetailComponent } from '../calendar/task-detail/task-detail.component';
+import { NotificationPreferencesComponent } from './notification-preferences/notification-preferences.component';
 import { addIcons } from 'ionicons';
 import { homeOutline, waterOutline, sparklesOutline, basketOutline, checkmarkCircleOutline } from 'ionicons/icons';
 
@@ -16,7 +17,7 @@ import { homeOutline, waterOutline, sparklesOutline, basketOutline, checkmarkCir
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [IonAvatar, IonButton, IonCard, IonContent, IonIcon, IonProgressBar, IonRefresher, IonRefresherContent, IonSpinner, TaskDetailComponent],
+  imports: [IonAvatar, IonButton, IonCard, IonContent, IonIcon, IonProgressBar, IonRefresher, IonRefresherContent, IonSpinner, TaskDetailComponent, NotificationPreferencesComponent],
 })
 export class HomePage {
   private readonly tasksService = inject(TasksService);

@@ -6,6 +6,10 @@ import type { FirebaseOptions } from 'firebase/app';
 
 export const environment = {
   production: false,
+  notifications: {
+    vapidKey: 'BC4LWN-nUq4dEyXciHf4Fhjl2iyf411tewpb1IChNq8RQo-D5x-TsPtVxtWulQLRvg88lWU7yPHYu1bogqQT9RY',
+    appCheckSiteKey: '',
+  },
   firebase: {
     // Replace locally before using the Firebase service.
     apiKey: 'AIzaSyBCX6GHPDDfIlRuggRLZojRt8TohivVMHs',
