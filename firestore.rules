@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Preserve the deployed app's access model, except for notification data.
+    match /{collection}/{document=**} {
+      allow read, write: if collection != 'pushSubscriptions'
+        && collection != 'weeklyNotificationEvents';
+    }
+
+    match /pushSubscriptions/{device} {
+      allow read, write: if false;
+    }
+
+    function newlySavedChore(week, chore) {
+      let path = /databases/$(database)/documents/tasks/$(week + '_' + chore);
+      return chore in ['bathroom-a', 'bathroom-b', 'kitchen', 'hallway']
+        && !exists(path)
+        && getAfter(path).data.weekStart == week
+        && getAfter(path).data.choreId == chore
+        && getAfter(path).data.todo == true;
+    }
+
+    match /weeklyNotificationEvents/{week} {
+      // These records contain no device tokens or personal notification text.
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['weekStart', 'choreIds', 'createdAt'])
+        && week.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.weekStart == week
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.choreIds is list
+        && request.resource.data.choreIds.size() >= 1
+        && request.resource.data.choreIds.size() <= 4
+        && request.resource.data.choreIds.toSet().size() == request.resource.data.choreIds.size()
+        && newlySavedChore(week, request.resource.data.choreIds[0])
+        && (request.resource.data.choreIds.size() < 2 || newlySavedChore(week, request.resource.data.choreIds[1]))
+        && (request.resource.data.choreIds.size() < 3 || newlySavedChore(week, request.resource.data.choreIds[2]))
+        && (request.resource.data.choreIds.size() < 4 || newlySavedChore(week, request.resource.data.choreIds[3]));
+      allow update, delete: if false;
+    }
+  }
+}

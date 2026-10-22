@@ -17,6 +17,7 @@ const calendarUrl = 'https://housemate-16-1d.web.app/tabs/calendar';
 
 // App Check attests the client, not the identity of a housemate.
 export const setPushSubscription = onCall({
+  invoker: 'public',
   enforceAppCheck: true,
   cors: ['https://housemate-16-1d.web.app', 'https://housemate-16-1d.firebaseapp.com'],
 }, async (request) => {

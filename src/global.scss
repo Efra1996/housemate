@@ -40,6 +40,10 @@ body {
   font-family: var(--ion-font-family);
 }
 
+ion-card.task-has-notes { border-right: 4px solid var(--housemate-note); }
+.task-note-indicator { display: block; margin-top: 6px; color: var(--housemate-note); font-size: 11px; }
+.notes-status { margin: 0 0 14px; color: var(--housemate-muted); font-size: 12px; line-height: 1.6; }
+
 :focus-visible {
   outline: 3px solid var(--ion-color-primary);
   outline-offset: 4px;

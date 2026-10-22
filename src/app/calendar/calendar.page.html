@@ -43,6 +43,9 @@
     <section class="agenda" aria-labelledby="agenda-title">
       <div class="agenda-heading"><h2 id="agenda-title">Agenda del día</h2><ion-button class="counter-button" fill="clear" size="small" [disabled]="loading() || !mates().length" aria-haspopup="dialog" (click)="counterOpen.set(true)">Contador de tareas</ion-button></div>
       <p class="selected-date date-heading">{{ selectedDateLabel() }} <span class="count">{{ loading() ? 'Cargando…' : error() ? 'No disponible' : agenda().length + (agenda().length === 1 ? ' tarea' : ' tareas') }}</span></p>
+      @if (previousNotesError()) {
+        <div class="notes-status" role="alert">{{ previousNotesError() }} <ion-button fill="clear" size="small" (click)="loadPreviousNotes()">Reintentar</ion-button></div>
+      }
       <div aria-live="polite" aria-atomic="true" [attr.aria-busy]="loading()">
         @if (loading()) {
           <ion-list class="schedule" lines="none" aria-label="Cargando agenda">
@@ -63,10 +66,10 @@
               @let mate = taskMate(task);
               <div class="appointment">
                 <span class="timeline" aria-hidden="true"></span>
-                <ion-card class="task-card">
+                <ion-card class="task-card" [class.task-has-notes]="hasTaskNotes(task)">
                   <ion-item lines="none" [button]="true" [detail]="false" (click)="openTaskDetail(task)"
                     aria-haspopup="dialog" [attr.aria-label]="'Ver detalles de ' + task.task + ', asignada a ' + (mate?.nombre ?? task.mate) + ', ' + (task.todo ? 'pendiente' : 'completada')">
-                    <ion-label class="ion-text-wrap"><h3>{{ task.task }}</h3><p>Asignada a {{ mate?.nombre ?? task.mate }}</p><p>Fecha límite: {{ selectedDateLabel() }}</p><ion-badge>{{ task.todo ? 'Pendiente' : 'Completada' }}</ion-badge></ion-label>
+                    <ion-label class="ion-text-wrap"><h3>{{ task.task }}</h3><p>Asignada a {{ mate?.nombre ?? task.mate }}</p><p>Fecha límite: {{ selectedDateLabel() }}</p><ion-badge>{{ task.todo ? 'Pendiente' : 'Completada' }}</ion-badge>@if (hasTaskNotes(task)) { <span class="task-note-indicator">Con observaciones</span> }</ion-label>
                     @if (mate) {
                       <ion-avatar slot="end" [class]="'avatar avatar--' + avatarColor(mate.id)" [attr.aria-label]="mate.nombre"><span>{{ mate.avatar }}</span></ion-avatar>
                     }
@@ -86,5 +89,7 @@
 </ion-content>
 <app-organize-week [isOpen]="organizerOpen()" [mates]="mates()" [initialDate]="selectedDate()" (saved)="onWeekSaved($event)" (dismissed)="organizerOpen.set(false)"></app-organize-week>
 <app-task-detail [task]="detailTask()" [mate]="detailMate()" [avatarColor]="detailAvatarColor()"
+  [previousTask]="previousTasks().get(detailTask()?.id ?? '')" [previousNotesLoading]="previousNotesLoading()" [previousNotesError]="previousNotesError()"
+  (retryPreviousNotes)="loadPreviousNotes()"
   (saved)="onTaskStatusSaved($event)" (dismissed)="detailTask.set(null)"></app-task-detail>
 <app-task-counter [isOpen]="counterOpen()" [mates]="mates()" [initialMonth]="selectedDate().slice(0, 7)" (dismissed)="counterOpen.set(false)"></app-task-counter>

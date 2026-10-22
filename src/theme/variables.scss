@@ -26,6 +26,7 @@
   --housemate-progress-heading: #2c6044;
   --housemate-progress-text: #365d46;
   --housemate-due: #92601e;
+  --housemate-note: #80658f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,5 +57,6 @@
     --housemate-progress-heading: #c3e2bd;
     --housemate-progress-text: #c1d7bc;
     --housemate-due: #e5bd82;
+    --housemate-note: #c6add5;
   }
 }

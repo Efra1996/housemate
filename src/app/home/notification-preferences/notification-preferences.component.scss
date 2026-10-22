@@ -1,20 +1,13 @@
-:host { display: block; }
-.notification { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 20px 0; margin: -14px 0 28px; border-bottom: 1px solid var(--housemate-line); }
-.notification > ion-icon { font-size: 24px; color: var(--ion-color-primary); }
-h2 { margin: 0 0 4px; font-size: 14px; font-weight: 650; }
-p { max-width: 64ch; margin: 0; color: var(--housemate-muted); font-size: 12px; line-height: 1.6; }
-.error { margin-top: 6px; color: var(--ion-color-danger); }
-ion-button { margin: 0; min-height: 44px; font-size: 13px; text-transform: none; --border-radius: 11px; }
-ion-spinner { width: 18px; height: 18px; }
+:host { display: block; flex-shrink: 0; }
+ion-button { margin: 0; min-height: 44px; font-size: 13px; text-transform: none; }
+.notification-button { width: 44px; height: 44px; color: var(--ion-color-primary); --padding-start: 0; --padding-end: 0; --border-radius: 50%; --background: var(--housemate-surface); }
+ion-icon { font-size: 22px; }
+ion-spinner { width: 20px; height: 20px; }
 ion-modal { --width: 440px; --height: 420px; --max-height: 90vh; --border-radius: 22px; }
 ion-toolbar { --background: var(--ion-background-color); }
 ion-title { font-size: 18px; }
 .help-content { padding: 16px 24px 24px; }
-.help-content p, li { font-size: 14px; line-height: 1.65; }
-.help-content p { margin-bottom: 16px; }
+p, li { color: var(--housemate-muted); font-size: 14px; line-height: 1.65; }
+p { margin: 0 0 16px; }
 ol { padding-left: 20px; }
 li { margin-bottom: 10px; }
-@media (max-width: 700px) {
-  .notification { gap: 12px; margin-top: -8px; }
-  .notification > ion-button { grid-column: 2 / -1; justify-self: start; }
-}

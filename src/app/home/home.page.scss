@@ -26,15 +26,6 @@ h1 {
   letter-spacing: -1px;
 }
 
-.brand {
-  margin: 0;
-  min-height: 44px;
-  text-transform: none;
-  color: var(--ion-color-primary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
 ion-icon { font-size: 22px; flex-shrink: 0; }
 
 .members { display: flex; gap: 7px; margin-bottom: 28px; }
@@ -148,8 +139,6 @@ ion-progress-bar {
     max-width: 460px;
     padding-bottom: 28px;
   }
-  .brand { width: 44px; padding: 0; --padding-start: 0; --padding-end: 0; background: var(--housemate-surface); border-radius: 50%; }
-  .brand span { display: none; }
   h1 { font-size: 29px; }
   .members { margin-bottom: 23px; }
   .progress-card {

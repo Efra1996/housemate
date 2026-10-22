@@ -1,6 +1,6 @@
 ion-modal {
   --width: 460px;
-  --height: 490px;
+  --height: 740px;
   --max-height: 90vh;
   --border-radius: 24px;
 }
@@ -28,9 +28,17 @@ dd { margin: 0; font-size: 13px; text-align: right; }
 ion-toggle { width: 100%; }
 ion-toggle strong { font-size: 15px; font-weight: 600; }
 ion-toggle p { margin: 5px 0 0; color: var(--housemate-muted); font-size: 12px; line-height: 1.5; }
-.draft-message, .error-message { margin: 12px 2px 0; font-size: 12px; line-height: 1.6; }
-.draft-message { color: var(--housemate-muted); }
+.error-message { margin: 12px 2px 0; font-size: 12px; line-height: 1.6; }
 .error-message { color: var(--ion-color-danger); }
+.previous-note { margin: 0 0 22px; padding: 14px 16px; background: var(--housemate-surface); border-radius: 12px; }
+.previous-note.has-note { border-right: 4px solid var(--housemate-note); }
+h3 { margin: 0 0 8px; font-size: 13px; font-weight: 650; }
+.previous-note p, .saved-note p { margin: 0; color: var(--housemate-muted); font-size: 12px; line-height: 1.6; }
+.note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.previous-note .note-text { color: var(--ion-text-color); }
+.previous-note .note-author { margin-top: 8px; }
+.notes-editor, .saved-note { margin-top: 20px; }
+ion-textarea { font-size: 14px; --border-radius: 12px; }
 .detail-footer {
   display: grid; grid-template-columns: 1fr 1.7fr; gap: 10px;
   padding: 16px 22px calc(20px + var(--ion-safe-area-bottom, 0px));

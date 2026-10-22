@@ -2,7 +2,7 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import type { OnChanges, SimpleChanges } from '@angular/core';
 import {
   IonAvatar, IonButton, IonButtons, IonContent, IonFooter, IonHeader,
-  IonIcon, IonModal, IonSpinner, IonTitle, IonToggle, IonToolbar,
+  IonIcon, IonModal, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { closeOutline } from 'ionicons/icons';
@@ -14,16 +14,22 @@ import { TasksService } from '../../services/tasks.service';
   selector: 'app-task-detail',
   templateUrl: './task-detail.component.html',
   styleUrls: ['./task-detail.component.scss'],
-  imports: [IonAvatar, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonModal, IonSpinner, IonTitle, IonToggle, IonToolbar],
+  imports: [IonAvatar, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonModal, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar],
 })
 export class TaskDetailComponent implements OnChanges {
   readonly task = input<Task | null>(null);
   readonly mate = input<Mate | undefined>();
   readonly avatarColor = input('peach');
+  readonly previousTask = input<Task | undefined>();
+  readonly previousNotesLoading = input(false);
+  readonly previousNotesError = input<string | null>(null);
+  readonly retryPreviousNotes = output<void>();
   readonly dismissed = output<void>();
-  readonly saved = output<Pick<Task, 'id' | 'todo'>>();
+  readonly saved = output<Pick<Task, 'id' | 'todo' | 'notes'>>();
 
   readonly completed = signal(false);
+  readonly notes = signal('');
+  readonly notesToSave = computed(() => this.completed() ? this.notes().trim() : (this.task()?.notes ?? ''));
   readonly saving = signal(false);
   readonly error = signal('');
   private readonly confirmed = signal(false);
@@ -31,7 +37,8 @@ export class TaskDetailComponent implements OnChanges {
 
   readonly canSave = computed(() => {
     const task = this.task();
-    return !!task && this.completed() !== !task.todo && !this.saving() && !this.confirmed();
+    return !!task && (this.completed() !== !task.todo || this.notesToSave() !== (task.notes ?? ''))
+      && this.notesToSave().length <= 500 && !this.saving() && !this.confirmed();
   });
   readonly deadlineLabel = computed(() => {
     const task = this.task();
@@ -39,17 +46,14 @@ export class TaskDetailComponent implements OnChanges {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     }).format(task.date) : '';
   });
+  readonly previousWeekLabel = computed(() => {
+    const week = this.previousTask()?.weekStart;
+    return week ? new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+      .format(new Date(`${week}T00:00:00`)) : '';
+  });
   readonly deadlineKey = computed(() => {
     const date = this.task()?.date;
     return date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '';
-  });
-  readonly draftMessage = computed(() => {
-    const task = this.task();
-    if (!task) return '';
-    if (this.completed() !== !task.todo) {
-      return this.completed() ? 'Se marcará como completada al guardar.' : 'Volverá a estar pendiente al guardar.';
-    }
-    return task.todo ? 'La tarea sigue pendiente.' : 'La tarea está completada. Desactívala para dejarla pendiente.';
   });
 
   constructor() {
@@ -59,6 +63,7 @@ export class TaskDetailComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['task']) {
       this.completed.set(this.task() ? !this.task()?.todo : false);
+      this.notes.set(this.task()?.notes ?? '');
       this.error.set('');
       this.confirmed.set(false);
     }
@@ -78,10 +83,11 @@ export class TaskDetailComponent implements OnChanges {
     const task = this.task();
     if (!task || !this.canSave()) return;
     const todo = !this.completed();
+    const notes = this.notesToSave();
     this.saving.set(true);
     this.error.set('');
     try {
-      await this.tasksService.updateTaskStatus(task.id, todo);
+      await this.tasksService.updateTaskStatus(task.id, todo, notes);
     } catch (error: unknown) {
       const code = error instanceof Error && 'code' in error ? error.code : undefined;
       this.error.set(code === 'not-found'
@@ -92,6 +98,6 @@ export class TaskDetailComponent implements OnChanges {
       this.saving.set(false);
     }
     this.confirmed.set(true);
-    this.saved.emit({ id: task.id, todo });
+    this.saved.emit({ id: task.id, todo, notes });
   }
 }

@@ -44,6 +44,10 @@ export class CalendarPage {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly tasks = signal<Task[]>([]);
+  readonly previousTasks = signal(new Map<string, Task>());
+  readonly previousNotesLoading = signal(false);
+  readonly previousNotesError = signal<string | null>(null);
+  private notesRequestId = 0;
   readonly mates = signal<Mate[]>([]);
   readonly skeletonRows = [0, 1, 2];
   readonly weekdayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -102,10 +106,11 @@ export class CalendarPage {
     if (!this.detailTask()) this.detailTask.set(task);
   }
 
-  onTaskStatusSaved(result: Pick<Task, 'id' | 'todo'>): void {
-    this.tasks.update((tasks) => tasks.map((task) => task.id === result.id ? { ...task, todo: result.todo } : task));
+  onTaskStatusSaved(result: Pick<Task, 'id' | 'todo' | 'notes'>): void {
+    this.tasks.update((tasks) => tasks.map((task) => task.id === result.id ? { ...task, ...result } : task));
     this.detailTask.set(null);
-    this.saveNotice.set(result.todo ? 'La tarea vuelve a estar pendiente.' : 'Tarea marcada como completada.');
+    this.saveNotice.set(result.todo ? 'Cambios guardados. La tarea está pendiente.' : 'Cambios guardados. La tarea está completada.');
+    void this.loadPreviousNotes();
   }
 
   async loadData(selectUpcomingDay = false): Promise<void> {
@@ -113,6 +118,10 @@ export class CalendarPage {
     this.loading.set(true);
     this.error.set(null);
     this.tasks.set([]);
+    this.previousTasks.set(new Map());
+    this.previousNotesError.set(null);
+    this.previousNotesLoading.set(false);
+    ++this.notesRequestId;
     this.mates.set([]);
 
     const requestedDate = this.selectedDate();
@@ -131,6 +140,7 @@ export class CalendarPage {
       ]);
       if (requestId !== this.requestId) return;
       this.tasks.set(tasks);
+      void this.loadPreviousNotes();
       this.mates.set(mates);
       this.loadedMonth = requestedDate.slice(0, 7);
       if (selectUpcomingDay && this.selectedDate() === requestedDate) {
@@ -150,6 +160,26 @@ export class CalendarPage {
     } finally {
       if (requestId === this.requestId) this.loading.set(false);
     }
+  }
+
+  async loadPreviousNotes(): Promise<void> {
+    const requestId = ++this.notesRequestId;
+    const tasks = this.tasks();
+    this.previousTasks.set(new Map());
+    this.previousNotesLoading.set(true);
+    this.previousNotesError.set(null);
+    try {
+      const previous = await this.tasksService.getPreviousCompletedTasks(tasks);
+      if (requestId === this.notesRequestId) this.previousTasks.set(previous);
+    } catch {
+      if (requestId === this.notesRequestId) this.previousNotesError.set('No se pudieron cargar las observaciones anteriores.');
+    } finally {
+      if (requestId === this.notesRequestId) this.previousNotesLoading.set(false);
+    }
+  }
+
+  hasTaskNotes(task: Task): boolean {
+    return !!task.notes || (task.todo && !!this.previousTasks().get(task.id)?.notes);
   }
 
   selectDate(value: string | string[] | null | undefined): void {

@@ -1,44 +1,29 @@
-<section class="notification" aria-labelledby="notification-title" [attr.aria-busy]="notifications.busy()">
-  <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
-  <div aria-live="polite">
-    @switch (notifications.state()) {
-      @case ('checking') { <h2 id="notification-title">Notificaciones</h2><p>Comprobando los avisos de este dispositivo…</p> }
-      @case ('on') { <h2 id="notification-title">Notificaciones activadas</h2><p>Este dispositivo recibirá los avisos de nuevas semanas organizadas.</p> }
-      @case ('blocked') { <h2 id="notification-title">Las notificaciones están bloqueadas</h2><p>Permite las notificaciones de Housemate en los ajustes del navegador y vuelve a intentarlo.</p> }
-      @case ('ios') { <h2 id="notification-title">Añade Housemate a tu pantalla de inicio</h2><p>En iPhone, abre la app desde su icono para poder activar los avisos.</p> }
-      @case ('unsupported') { <h2 id="notification-title">Notificaciones no disponibles</h2><p>Este navegador no admite estos avisos. Puedes seguir usando Housemate con normalidad.</p> }
-      @case ('unconfigured') { <h2 id="notification-title">Notificaciones no disponibles</h2><p>Los avisos no están disponibles en este momento. Puedes seguir usando Housemate con normalidad.</p> }
-      @default { <h2 id="notification-title">Entérate cuando se organice la semana</h2><p>Recibe un aviso en este dispositivo cuando estén listas las tareas.</p> }
-    }
-    @if (notifications.error()) { <p class="error" role="alert">{{ notifications.error() }}</p> }
-  </div>
-  @switch (notifications.state()) {
-    @case ('on') { <ion-button fill="outline" [disabled]="notifications.busy()" (click)="notifications.disable()">Desactivar</ion-button> }
-    @case ('ios') { <ion-button fill="outline" aria-haspopup="dialog" (click)="helpOpen.set(true)">Ver pasos</ion-button> }
-    @case ('blocked') { <ion-button fill="outline" aria-haspopup="dialog" (click)="helpOpen.set(true)">Cómo activarlas</ion-button> }
-    @case ('off') {
-      <ion-button [disabled]="notifications.busy()" (click)="notifications.enable()">
-        @if (notifications.busy()) { <ion-spinner name="crescent" slot="start" aria-hidden="true"></ion-spinner> }
-        {{ notifications.error() ? 'Reintentar' : 'Activar notificaciones' }}
-      </ion-button>
-    }
+<ion-button class="notification-button" fill="clear" size="small"
+  [attr.aria-label]="buttonLabel()" [attr.title]="buttonLabel()"
+  [attr.aria-pressed]="notifications.state() === 'on'" [attr.aria-busy]="notifications.busy()"
+  [disabled]="notifications.busy() || notifications.state() === 'checking'" (click)="toggleNotifications()">
+  @if (notifications.busy() || notifications.state() === 'checking') {
+    <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+  } @else {
+    <ion-icon slot="icon-only" [name]="notifications.state() === 'on' ? 'notifications-outline' : 'notifications-off-outline'" aria-hidden="true"></ion-icon>
   }
-</section>
-<ion-modal [isOpen]="helpOpen()" (didDismiss)="helpOpen.set(false)" aria-labelledby="notification-help-title">
+</ion-button>
+<ion-modal [isOpen]="dialog() !== null" (didDismiss)="dialog.set(null)" aria-labelledby="notification-help-title">
   <ng-template>
-    <ion-header class="ion-no-border"><ion-toolbar>
-      <ion-title id="notification-help-title">{{ notifications.state() === 'ios' ? 'Activar avisos en iPhone' : 'Permitir las notificaciones' }}</ion-title>
-      <ion-buttons slot="end"><ion-button aria-label="Cerrar" (click)="helpOpen.set(false)"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
-    </ion-toolbar></ion-header>
-    <ion-content><div class="help-content">
-      @if (notifications.state() === 'ios') {
-        <ol><li>Abre Housemate en Safari.</li><li>Toca Compartir y selecciona <strong>Añadir a pantalla de inicio</strong>.</li><li>Abre Housemate desde el nuevo icono.</li><li>Toca <strong>Activar notificaciones</strong> y acepta el permiso.</li></ol>
-        <p>Necesitas iOS 16.4 o posterior y una versión compatible de Safari.</p>
-      } @else {
-        <p>Abre los ajustes de permisos de este sitio en tu navegador y permite las notificaciones de Housemate.</p>
-        <p>Después, vuelve a la app y toca <strong>Activar notificaciones</strong>. Si tu dispositivo también bloquea los avisos, revisa sus ajustes de notificaciones.</p>
-      }
-      <ion-button expand="block" (click)="helpOpen.set(false)">Entendido</ion-button>
-    </div></ion-content>
+    @if (dialog(); as information) {
+      <ion-header class="ion-no-border"><ion-toolbar>
+        <ion-title id="notification-help-title">{{ information.title }}</ion-title>
+        <ion-buttons slot="end"><ion-button aria-label="Cerrar" (click)="dialog.set(null)"><ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon></ion-button></ion-buttons>
+      </ion-toolbar></ion-header>
+      <ion-content><div class="help-content">
+        @if (information.ios) {
+          <ol><li>Abre Housemate en Safari.</li><li>Toca Compartir y selecciona <strong>Añadir a pantalla de inicio</strong>.</li><li>Abre Housemate desde el nuevo icono.</li><li>Toca la <strong>campana</strong> y acepta el permiso.</li></ol>
+          <p>Necesitas iOS 16.4 o posterior y una versión compatible de Safari.</p>
+        } @else {
+          <p>{{ information.message }}</p>
+        }
+        <ion-button expand="block" (click)="dialog.set(null)">Entendido</ion-button>
+      </div></ion-content>
+    }
   </ng-template>
 </ion-modal>

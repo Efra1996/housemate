@@ -30,12 +30,34 @@ export class TasksService {
       .filter((task) => !completedOnly || !task.todo);
   }
 
-  async updateTaskStatus(id: string, todo: boolean): Promise<void> {
+  async getPreviousCompletedTasks(tasks: readonly Task[]): Promise<Map<string, Task>> {
+    const previous = new Map<string, Task>();
+    const identified = tasks.filter((task) => task.choreId && task.weekStart);
+    if (!identified.length) return previous;
+    // One completed-history read serves all visible tasks, including month boundaries.
+    const history = (await this.getTasksForCounter(null, true))
+      .filter((task) => task.choreId && task.weekStart)
+      .sort((first, second) => (second.weekStart ?? '').localeCompare(first.weekStart ?? '')
+        || first.id.localeCompare(second.id));
+    for (const task of identified) {
+      const latest = history.find((candidate) => candidate.choreId === task.choreId
+        && candidate.weekStart !== undefined && task.weekStart !== undefined && candidate.weekStart < task.weekStart);
+      // Select before checking notes: an empty latest note must stop older notes resurfacing.
+      if (latest) previous.set(task.id, latest);
+    }
+    return previous;
+  }
+
+  async updateTaskStatus(id: string, todo: boolean, notes?: string): Promise<void> {
     if (!id.trim() || id !== id.trim() || id.includes('/') || typeof todo !== 'boolean') {
       throw new Error('Expected a valid task document ID and a boolean todo status.');
     }
-    // Update only the status; updateDoc fails rather than recreating a deleted task.
-    await updateDoc(doc(this.firebase.firestore, 'tasks', id), { todo });
+    if (notes !== undefined && (typeof notes !== 'string' || notes.trim().length > 500)) {
+      throw new Error('Expected plain-text notes of at most 500 characters.');
+    }
+    // Save status and optional notes together; never recreate a deleted task.
+    await updateDoc(doc(this.firebase.firestore, 'tasks', id),
+      notes === undefined ? { todo } : { todo, notes: notes.trim() });
   }
 
   async saveWeeklySchedule(proposal: WeeklySchedule, availableMateIds: readonly string[]): Promise<void> {
@@ -150,7 +172,7 @@ export class TasksService {
   }
 
   private toTask(id: string, data: Record<string, unknown>): Task {
-    const { task, mate, date, todo, choreId, mateId, weekStart } = data;
+    const { task, mate, date, todo, choreId, mateId, weekStart, notes } = data;
     if (typeof task !== 'string' || !task.trim()
       || typeof mate !== 'string' || !mate.trim()
       || !(date instanceof Timestamp) || typeof todo !== 'boolean') {
@@ -158,6 +180,10 @@ export class TasksService {
     }
 
     const result: Task = { id, task: task.trim(), mate: mate.trim(), date: date.toDate(), todo };
+    if (notes !== undefined) {
+      if (typeof notes !== 'string') throw new Error(`Invalid task document: tasks/${id}. Expected notes to be a string.`);
+      result.notes = notes.trim();
+    }
     if (choreId !== undefined) {
       result.choreId = this.readReference(id, 'choreId', choreId);
     }

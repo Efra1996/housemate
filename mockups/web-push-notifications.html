@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Housemate — Notificaciones · Maqueta</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f6f7f2; --surface: #ffffff; --sage: #e7f0e3;
+      --green: #347653; --ink: #293d33; --muted: #647269; --line: #e5e9df;
+      --contrast: #ffffff; --track: #ccdec6;
+      font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+      color: var(--ink); background: var(--background);
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --background: #18201c; --surface: #242e28; --sage: #2b3d2e;
+      --green: #9bceaa; --ink: #edf2e9; --muted: #b1bdb2; --line: #37463b;
+      --contrast: #18201c; --track: #47604a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .65; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .review { padding: 16px 24px; border-bottom: 1px dashed var(--line); background: var(--surface); }
+    .review-inner { max-width: 976px; margin: auto; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .review strong { font-size: 13px; }
+    .review label { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+    select { max-width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; color: var(--ink); background: var(--surface); }
+    .review p { max-width: 976px; margin: 8px auto 0; font-size: 12px; color: var(--muted); }
+    .dashboard { max-width: 1056px; margin: auto; padding: 40px 40px 30px; }
+    .heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .date { margin: 0 0 5px; font-size: 13px; color: var(--muted); }
+    h1 { margin: 0; font-size: 32px; font-weight: 650; letter-spacing: -1px; }
+    .home-mark { color: var(--green); padding: 10px; }
+    .members { display: flex; gap: 7px; margin-bottom: 28px; }
+    .avatar { width: 30px; height: 30px; border: 2px solid var(--background); border-radius: 50%; display: grid; place-items: center; color: #374438; background: #edc5a9; font-size: 10px; font-weight: 700; }
+    .avatar:nth-child(2) { background: #d4dfba; } .avatar:nth-child(3) { background: #dbd0e8; }
+    .avatar:nth-child(4) { background: #cbdde2; } .avatar:nth-child(5) { background: #e6d9b9; }
+    .progress { padding: 27px 30px; border-radius: 22px; background: var(--sage); }
+    .progress h2 { margin: 0 0 8px; font-size: 21px; font-weight: 600; letter-spacing: -.4px; }
+    .progress p { margin: 0; font-size: 14px; }
+    .track { height: 5px; margin: 20px 0 9px; background: var(--track); border-radius: 8px; overflow: hidden; }
+    .track span { display: block; height: 100%; width: 25%; background: var(--green); }
+    .progress .caption { font-size: 12px; }
+    .notification { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 20px 0; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .notification > svg { color: var(--green); }
+    .notification h2 { font-size: 14px; font-weight: 650; margin: 0 0 4px; }
+    .notification p { max-width: 64ch; margin: 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
+    .notification .feedback { margin-top: 6px; color: var(--green); }
+    .button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--green); border-radius: 11px; background: var(--green); color: var(--contrast); font-size: 13px; font-weight: 600; }
+    .button.secondary { background: transparent; color: var(--green); }
+    .sections { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .section-heading { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin: 0 0 14px; }
+    .section-heading h2 { margin: 0; font-size: 19px; font-weight: 650; }
+    .section-heading span { color: var(--green); font-size: 12px; }
+    .record { display: flex; align-items: center; gap: 12px; padding: 16px; margin-bottom: 12px; min-height: 84px; border-radius: 17px; background: var(--surface); }
+    .tile { flex-shrink: 0; width: 43px; height: 43px; display: grid; place-items: center; border-radius: 12px; color: var(--green); background: var(--sage); }
+    .record-copy { flex: 1; min-width: 0; }
+    .record h3 { font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+    .record p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .record strong { font-size: 14px; white-space: nowrap; }
+    .tabs { display: flex; justify-content: center; gap: 70px; border-top: 1px solid var(--line); padding: 14px 20px; background: var(--surface); color: var(--muted); font-size: 12px; }
+    .tabs span:first-child { color: var(--green); font-weight: 650; }
+    dialog { width: min(440px, calc(100% - 32px)); max-height: 85vh; overflow: auto; border: 0; border-radius: 22px; padding: 24px; color: var(--ink); background: var(--background); }
+    dialog::backdrop { background: rgba(17, 29, 21, .5); }
+    dialog h2 { margin: 12px 0; font-size: 21px; }
+    dialog p, dialog li { font-size: 14px; line-height: 1.65; }
+    dialog ol { padding-left: 20px; }
+    .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 22px; }
+    .simulation { margin: 0; font-size: 12px; color: var(--muted); }
+    @media (max-width: 700px) {
+      .dashboard { max-width: 460px; padding: 28px 20px; }
+      h1 { font-size: 29px; }
+      .members { margin-bottom: 23px; }
+      .progress { padding: 21px 17px; }
+      .progress h2 { font-size: 17px; }
+      .progress p { font-size: 12px; }
+      .sections { grid-template-columns: 1fr; gap: 20px; }
+      .notification { gap: 12px; }
+      .notification .button { grid-column: 2 / -1; justify-self: start; }
+      .section-heading h2 { font-size: 18px; }
+      .tabs { gap: 42px; }
+      .review { padding: 12px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" style="display:none"><defs>
+    <symbol id="bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1"/></symbol>
+    <symbol id="house" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></symbol>
+    <symbol id="sparkle" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM21 2v4M19 4h4"/></symbol>
+    <symbol id="basket" viewBox="0 0 24 24"><path d="M3 9h18l-2 11H5ZM7 9l5-7 5 7M9 13v4M15 13v4"/></symbol>
+  </defs></svg>
+  <aside class="review" aria-label="Controles de la maqueta">
+    <div class="review-inner">
+      <strong>Maqueta · Notificaciones</strong>
+      <label for="state">Estado <select id="state">
+        <option value="off">Sin activar</option><option value="on">Activadas</option>
+        <option value="blocked">Permiso bloqueado</option><option value="ios">iPhone sin instalar</option>
+        <option value="unsupported">Navegador no compatible</option><option value="error">Error al activar</option>
+      </select></label>
+      <label for="theme">Tema <select id="theme"><option value="light">Claro</option><option value="dark">Oscuro</option></select></label>
+    </div>
+    <p>Datos de ejemplo. Los botones simulan el flujo: no solicitan permisos, no envían avisos ni guardan cambios.</p>
+  </aside>
+  <main class="dashboard">
+    <header class="heading"><div><p class="date">Miércoles, 21 de octubre</p><h1>Inicio</h1></div><span class="home-mark"><svg aria-hidden="true"><use href="#house"/></svg></span></header>
+    <div class="members" aria-label="Integrantes del hogar"><span class="avatar" title="Efra">EF</span><span class="avatar" title="David">DA</span><span class="avatar" title="Ainara">AI</span><span class="avatar" title="Izaro">IZ</span><span class="avatar" title="Marcela">MA</span></div>
+    <section class="progress" aria-labelledby="progress-title"><h2 id="progress-title">Entre todos, más fácil.</h2><p>1 de 4 tareas completadas esta semana</p><div class="track" aria-hidden="true"><span></span></div><p class="caption">Pequeños pasos. Un hogar más a gusto.</p></section>
+    <section class="notification" aria-labelledby="notification-title">
+      <svg aria-hidden="true"><use href="#bell"/></svg>
+      <div aria-live="polite"><h2 id="notification-title">Entérate cuando se organice la semana</h2><p id="notification-copy">Recibe un aviso en este dispositivo cuando estén listas las tareas.</p><p class="feedback" id="feedback" role="status" hidden></p></div>
+      <button class="button" id="notification-action" type="button" aria-haspopup="dialog">Activar notificaciones</button>
+    </section>
+    <div class="sections">
+      <section aria-labelledby="tasks-title"><div class="section-heading"><h2 id="tasks-title">Tareas de la semana</h2><span>4 tareas</span></div>
+        <article class="record"><span class="tile"><svg aria-hidden="true"><use href="#sparkle"/></svg></span><div class="record-copy"><h3>Cocina</h3><p>Domingo, 25 oct · Efra</p><p>Pendiente</p></div></article>
+        <article class="record"><span class="tile"><svg aria-hidden="true"><use href="#sparkle"/></svg></span><div class="record-copy"><h3>Baño A</h3><p>Domingo, 25 oct · Ainara</p><p>Pendiente</p></div></article>
+      </section>
+      <section aria-labelledby="expenses-title"><div class="section-heading"><h2 id="expenses-title">Últimos gastos</h2><span>2 gastos</span></div>
+        <article class="record"><span class="tile"><svg aria-hidden="true"><use href="#basket"/></svg></span><div class="record-copy"><h3>Compra del supermercado</h3><p>20 oct · Pagó David</p></div><strong>45,00 €</strong></article>
+        <article class="record"><span class="tile"><svg aria-hidden="true"><use href="#basket"/></svg></span><div class="record-copy"><h3>Productos de limpieza</h3><p>18 oct · Pagó Marcela</p></div><strong>12,50 €</strong></article>
+      </section>
+    </div>
+  </main>
+  <footer class="tabs" aria-label="Navegación de ejemplo"><span>Inicio</span><span>Calendario</span><span>Gastos</span></footer>
+  <dialog id="permission" aria-labelledby="permission-title">
+    <p class="simulation">Simulación del permiso del navegador</p>
+    <h2 id="permission-title">¿Permitir notificaciones de Housemate?</h2>
+    <p>Recibirás un aviso cuando se guarden las tareas de una semana. Al tocarlo, se abrirá Calendario.</p>
+    <p class="simulation">En la app real, el navegador mostrará su propio aviso de permiso.</p>
+    <div class="dialog-actions"><button class="button secondary" data-permission="later">Ahora no</button><button class="button secondary" data-permission="blocked">Bloquear</button><button class="button" data-permission="on">Permitir</button></div>
+  </dialog>
+  <dialog id="help" aria-labelledby="help-title"><h2 id="help-title"></h2><div id="help-content"></div><div class="dialog-actions"><button class="button" id="close-help">Entendido</button></div></dialog>
+  <script>
+    const stateSelect = document.getElementById('state');
+    const action = document.getElementById('notification-action');
+    const feedback = document.getElementById('feedback');
+    const permission = document.getElementById('permission');
+    const help = document.getElementById('help');
+    const states = {
+      off: { title: 'Entérate cuando se organice la semana', copy: 'Recibe un aviso en este dispositivo cuando estén listas las tareas.', action: 'Activar notificaciones' },
+      on: { title: 'Notificaciones activadas', copy: 'Este dispositivo recibirá los avisos de nuevas semanas organizadas.', action: 'Desactivar', secondary: true },
+      blocked: { title: 'Las notificaciones están bloqueadas', copy: 'Permite las notificaciones de Housemate en los ajustes del navegador y vuelve a intentarlo.', action: 'Cómo activarlas', secondary: true },
+      ios: { title: 'Añade Housemate a tu pantalla de inicio', copy: 'En iPhone, abre la app desde su icono para poder activar los avisos.', action: 'Ver pasos', secondary: true },
+      unsupported: { title: 'Notificaciones no disponibles', copy: 'Este navegador no admite estos avisos. Puedes seguir usando Housemate con normalidad.' },
+      error: { title: 'No se pudieron activar los avisos', copy: 'Comprueba la conexión y vuelve a intentarlo. Las notificaciones aún no están activadas.', action: 'Reintentar' },
+    };
+    function render(state, message = '') {
+      stateSelect.value = state;
+      const view = states[state];
+      document.getElementById('notification-title').textContent = view.title;
+      document.getElementById('notification-copy').textContent = view.copy;
+      action.hidden = !view.action;
+      action.textContent = view.action || '';
+      action.classList.toggle('secondary', Boolean(view.secondary));
+      if (['off', 'error', 'blocked', 'ios'].includes(state)) action.setAttribute('aria-haspopup', 'dialog');
+      else action.removeAttribute('aria-haspopup');
+      feedback.textContent = message;
+      feedback.hidden = !message;
+    }
+    stateSelect.addEventListener('change', () => render(stateSelect.value));
+    document.getElementById('theme').addEventListener('change', event => document.documentElement.dataset.theme = event.target.value);
+    action.addEventListener('click', () => {
+      const state = stateSelect.value;
+      if (state === 'on') { render('off', 'Avisos desactivados solo en este dispositivo.'); return; }
+      if (state === 'off' || state === 'error') { permission.showModal(); return; }
+      const isIos = state === 'ios';
+      document.getElementById('help-title').textContent = isIos ? 'Activar avisos en iPhone' : 'Permitir las notificaciones';
+      document.getElementById('help-content').innerHTML = isIos
+        ? '<ol><li>Abre Housemate en Safari.</li><li>Toca Compartir y selecciona <strong>Añadir a pantalla de inicio</strong>.</li><li>Abre Housemate desde el nuevo icono.</li><li>Toca <strong>Activar notificaciones</strong> y acepta el permiso.</li></ol><p>Necesitas iOS 16.4 o posterior y una versión compatible de Safari.</p>'
+        : '<p>Abre los ajustes de permisos de este sitio en tu navegador y permite las notificaciones de Housemate.</p><p>Después, vuelve a la app y toca <strong>Activar notificaciones</strong>. Si tu dispositivo también bloquea los avisos, revisa sus ajustes de notificaciones.</p>';
+      help.showModal();
+    });
+    document.querySelectorAll('[data-permission]').forEach(button => button.addEventListener('click', () => {
+      permission.close();
+      const result = button.dataset.permission;
+      if (result !== 'later') render(result);
+    }));
+    document.getElementById('close-help').addEventListener('click', () => help.close());
+    render('off');
+  </script>
+</body>
+</html>

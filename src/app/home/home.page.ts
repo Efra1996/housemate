@@ -11,7 +11,7 @@ import { MatesService } from '../services/mates.service';
 import { TaskDetailComponent } from '../calendar/task-detail/task-detail.component';
 import { NotificationPreferencesComponent } from './notification-preferences/notification-preferences.component';
 import { addIcons } from 'ionicons';
-import { homeOutline, waterOutline, sparklesOutline, basketOutline, checkmarkCircleOutline } from 'ionicons/icons';
+import { waterOutline, sparklesOutline, basketOutline, checkmarkCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-home',
@@ -30,6 +30,10 @@ export class HomePage {
   readonly tasks = signal<Task[]>([]);
   readonly tasksLoading = signal(true);
   readonly tasksError = signal<string | null>(null);
+  readonly previousTasks = signal(new Map<string, Task>());
+  readonly previousNotesLoading = signal(false);
+  readonly previousNotesError = signal<string | null>(null);
+  private notesRequestId = 0;
   readonly weeklyTasks = computed(() => [
     ...this.tasks().filter((task) => task.todo),
     ...this.tasks().filter((task) => !task.todo),
@@ -69,7 +73,7 @@ export class HomePage {
   private refreshRequest: Promise<void> | null = null;
 
   constructor() {
-    addIcons({ homeOutline, waterOutline, sparklesOutline, basketOutline, checkmarkCircleOutline });
+    addIcons({ waterOutline, sparklesOutline, basketOutline, checkmarkCircleOutline });
   }
 
   ionViewWillEnter(): void {
@@ -135,8 +139,13 @@ export class HomePage {
     this.tasksLoading.set(true);
     this.tasksError.set(null);
     this.tasks.set([]);
+    this.previousTasks.set(new Map());
+    this.previousNotesError.set(null);
+    this.previousNotesLoading.set(false);
+    ++this.notesRequestId;
     try {
       this.tasks.set(await this.tasksService.getTasksForCurrentWeek());
+      void this.loadPreviousNotes();
     } catch (error: unknown) {
       const code = error instanceof Error && 'code' in error ? error.code : undefined;
       if (code === 'permission-denied') {
@@ -153,6 +162,26 @@ export class HomePage {
     }
   }
 
+  async loadPreviousNotes(): Promise<void> {
+    const requestId = ++this.notesRequestId;
+    const tasks = this.tasks();
+    this.previousTasks.set(new Map());
+    this.previousNotesLoading.set(true);
+    this.previousNotesError.set(null);
+    try {
+      const previous = await this.tasksService.getPreviousCompletedTasks(tasks);
+      if (requestId === this.notesRequestId) this.previousTasks.set(previous);
+    } catch {
+      if (requestId === this.notesRequestId) this.previousNotesError.set('No se pudieron cargar las observaciones anteriores.');
+    } finally {
+      if (requestId === this.notesRequestId) this.previousNotesLoading.set(false);
+    }
+  }
+
+  hasTaskNotes(task: Task): boolean {
+    return !!task.notes || (task.todo && !!this.previousTasks().get(task.id)?.notes);
+  }
+
   taskMember(task: Task): Mate | undefined {
     if (task.mateId) return this.members().find((member) => member.id === task.mateId);
     return this.members().find((member) => member.id === task.mate
@@ -163,9 +192,10 @@ export class HomePage {
     if (task.todo && !this.detailTask()) this.detailTask.set(task);
   }
 
-  onTaskStatusSaved(result: Pick<Task, 'id' | 'todo'>): void {
-    this.tasks.update((tasks) => tasks.map((task) => task.id === result.id ? { ...task, todo: result.todo } : task));
+  onTaskStatusSaved(result: Pick<Task, 'id' | 'todo' | 'notes'>): void {
+    this.tasks.update((tasks) => tasks.map((task) => task.id === result.id ? { ...task, ...result } : task));
     this.detailTask.set(null);
+    void this.loadPreviousNotes();
   }
 
   avatarColor(id: string): string {

@@ -8,10 +8,7 @@
         <p class="date"><time [attr.datetime]="currentDateKey()">{{ currentDateLabel() }}</time></p>
         <h1>Inicio</h1>
       </div>
-      <ion-button fill="clear" class="brand" aria-label="Actualizar inicio" [disabled]="refreshing()" [attr.aria-busy]="refreshing()" (click)="refresh()" size="small">
-        @if (refreshing()) { <ion-spinner name="crescent" aria-hidden="true"></ion-spinner> }
-        @else { <ion-icon name="home-outline" aria-hidden="true"></ion-icon> }
-      </ion-button>
+      <app-notification-preferences></app-notification-preferences>
     </header>
 
     <div class="members" role="group" aria-label="Integrantes del hogar" aria-live="polite" [attr.aria-busy]="matesLoading()">
@@ -48,11 +45,12 @@
       </svg>
     </ion-card>
 
-    <app-notification-preferences></app-notification-preferences>
-
     <div class="sections">
       <section aria-labelledby="tasks-title">
         <div class="section-heading"><h2 id="tasks-title">Tareas de la semana</h2><span>{{ tasksLoading() ? 'Cargando…' : tasksError() ? 'No disponible' : tasks().length + (tasks().length === 1 ? ' tarea' : ' tareas') }}</span></div>
+        @if (previousNotesError()) {
+          <div class="notes-status" role="alert">{{ previousNotesError() }} <ion-button fill="clear" size="small" (click)="loadPreviousNotes()">Reintentar</ion-button></div>
+        }
         <div class="record-list" aria-live="polite" [attr.aria-busy]="tasksLoading()">
           @if (tasksLoading()) {
             <ion-card class="record"><ion-spinner name="crescent" aria-label="Cargando tareas"></ion-spinner><div class="record-copy"><p>Cargando tareas de esta semana…</p></div></ion-card>
@@ -63,11 +61,11 @@
           }
           @for (task of weeklyTasks(); track task.id) {
             @let member = taskMember(task);
-            <ion-card class="record" [button]="task.todo" (click)="openPendingTask(task)"
+            <ion-card class="record" [class.task-has-notes]="hasTaskNotes(task)" [button]="task.todo" (click)="openPendingTask(task)"
               [attr.aria-haspopup]="task.todo ? 'dialog' : null"
               [attr.aria-label]="task.todo ? 'Ver detalles de ' + task.task + ', asignada a ' + (member?.nombre ?? task.mate) + ', pendiente' : null">
               <div class="icon-tile"><ion-icon [name]="task.todo ? 'sparkles-outline' : 'checkmark-circle-outline'" aria-hidden="true"></ion-icon></div>
-              <div class="record-copy"><h3>{{ task.task }}</h3><p>{{ taskSchedule(task) }} · {{ member?.nombre ?? task.mate }}</p><p>{{ task.todo ? 'Pendiente' : 'Completada' }}</p></div>
+              <div class="record-copy"><h3>{{ task.task }}</h3><p>{{ taskSchedule(task) }} · {{ member?.nombre ?? task.mate }}</p><p>{{ task.todo ? 'Pendiente' : 'Completada' }}</p>@if (hasTaskNotes(task)) { <span class="task-note-indicator">Con observaciones</span> }</div>
               @if (member) {
                 <ion-avatar [class]="'avatar avatar--' + avatarColor(member.id)" [attr.aria-label]="'Asignada a ' + member.nombre"><span>{{ member.avatar }}</span></ion-avatar>
               }
@@ -99,4 +97,6 @@
   </main>
 </ion-content>
 <app-task-detail [task]="detailTask()" [mate]="detailMember()" [avatarColor]="detailAvatarColor()"
+  [previousTask]="previousTasks().get(detailTask()?.id ?? '')" [previousNotesLoading]="previousNotesLoading()" [previousNotesError]="previousNotesError()"
+  (retryPreviousNotes)="loadPreviousNotes()"
   (saved)="onTaskStatusSaved($event)" (dismissed)="detailTask.set(null)"></app-task-detail>

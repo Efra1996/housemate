@@ -26,13 +26,36 @@
             </div>
             <div><dt>Fecha límite</dt><dd><time [attr.datetime]="deadlineKey()">{{ deadlineLabel() }}</time></dd></div>
           </dl>
+          <section class="previous-note" [class.has-note]="!!previousTask()?.notes" aria-labelledby="previous-note-title" [attr.aria-busy]="previousNotesLoading()">
+            <h3 id="previous-note-title">Nota de la limpieza anterior</h3>
+            @if (previousNotesLoading()) {
+              <p role="status">Buscando observaciones anteriores…</p>
+            } @else if (previousNotesError()) {
+              <p role="alert">{{ previousNotesError() }}</p>
+              <ion-button fill="clear" size="small" [disabled]="saving()" (click)="retryPreviousNotes.emit()">Reintentar</ion-button>
+            } @else if (previousTask()?.notes) {
+              <p class="note-text">{{ previousTask()?.notes }}</p>
+              <p class="note-author">{{ previousTask()?.mate }} · Semana del {{ previousWeekLabel() }}</p>
+            } @else {
+              <p>No hay observaciones de una limpieza anterior.</p>
+            }
+          </section>
           <div class="status-control">
             <ion-toggle justify="space-between" [checked]="completed()" [disabled]="saving()"
               (ionChange)="changeCompleted($event.detail.checked)">
               <strong>Completada</strong><p>Actívala cuando hayas terminado.</p>
             </ion-toggle>
           </div>
-          <p class="draft-message" role="status">{{ draftMessage() }}</p>
+          @if (completed()) {
+            <div class="notes-editor">
+              <ion-textarea label="Observaciones (opcional)" labelPlacement="stacked" fill="outline" mode="md"
+                placeholder="Para la próxima limpieza: repasar las estanterías comunes. No me dio tiempo a…"
+                [autoGrow]="true" [rows]="3" [maxlength]="500" [counter]="true" [disabled]="saving()"
+                [value]="notes()" (ionInput)="notes.set($event.detail.value ?? '')"></ion-textarea>
+            </div>
+          } @else if (selectedTask.notes) {
+            <section class="saved-note"><h3>Observaciones de esta tarea</h3><p class="note-text">{{ selectedTask.notes }}</p></section>
+          }
           @if (error()) { <p class="error-message" role="alert">{{ error() }}</p> }
         </div>
       }
